@@ -1,12 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import { PresetSelector } from "@/components/PresetSelector";
+import { getPresetById } from "@/data/playerPresets";
 
 export default function Home() {
+  const [gameMode, setGameMode] = useState("selection"); // 'selection' | 'custom' | 'playing'
+  const [selectedPreset, setSelectedPreset] = useState(null);
   const [playersInput, setPlayersInput] = useState("");
-  const [roles, setRoles] = useState([]); // arreglo de 5: 4 jugador + 1 IMPOSTOR
+  const [roles, setRoles] = useState([]);
+  const [currentPlayer, setCurrentPlayer] = useState("");
 
-  function startGame() {
+  const handleSelectPreset = (presetId) => {
+    const preset = getPresetById(presetId);
+    setSelectedPreset(preset);
+    
+    if (preset.id === 'custom') {
+      setGameMode('custom');
+    }
+  };
+
+  const handleContinueFromPreset = () => {
+    if (selectedPreset && selectedPreset.players.length > 0) {
+      const randomPlayer = selectedPreset.players[
+        Math.floor(Math.random() * selectedPreset.players.length)
+      ];
+      startGameWithPlayer(randomPlayer);
+    }
+  };
+
+  const startGame = () => {
     const list = playersInput
       .split("\n")
       .map((s) => s.trim())
@@ -18,56 +41,110 @@ export default function Home() {
     }
 
     const chosen = list[Math.floor(Math.random() * list.length)];
-    const roles5 = shuffle([...Array(4).fill(chosen), "IMPOSTOR"]);
-    setRoles(roles5);
-  }
+    startGameWithPlayer(chosen);
+  };
 
-  function resetGame() {
+  const startGameWithPlayer = (player) => {
+    setCurrentPlayer(player);
+    setRoles(shuffle([...Array(4).fill(player), "IMPOSTOR"]));
+    setGameMode('playing');
+  };
+
+  const resetGame = () => {
+    setGameMode('selection');
+    setSelectedPreset(null);
+    setPlayersInput("");
     setRoles([]);
-  }
+    setCurrentPlayer("");
+  };
 
   return (
     <main className="min-h-screen bg-[#1e1e2f] text-white flex flex-col items-center p-6">
       <h1 className="text-3xl sm:text-4xl font-bold mb-4">Juego del Impostor ⚽</h1>
-      <p className="opacity-80 mb-2 text-center">
-        Escribí <b>futbolistas</b> (uno por línea). El juego elegirá uno al azar,
-        creará <b>5 cartas</b> (4 iguales y 1 <b>IMPOSTOR</b>) y podrás
-        darlas vuelta tocándolas.
-      </p>
+      
+      {gameMode === 'selection' && (
+        <>
+          <p className="opacity-80 mb-8 text-center max-w-2xl">
+            Elige un modo de juego con futbolistas precargados o personaliza tu propia lista.
+            El juego elegirá un jugador al azar y creará <b>5 cartas</b> (4 iguales y 1 <b>IMPOSTOR</b>).
+          </p>
+          <PresetSelector 
+            onSelectPreset={handleSelectPreset}
+            onContinue={handleContinueFromPreset}
+          />
+        </>
+      )}
 
-      {/* Configuración */}
-      {roles.length === 0 && (
+      {gameMode === 'custom' && (
         <div className="w-full max-w-lg mt-4">
+          <p className="opacity-80 mb-4 text-center">
+            Escribí <b>futbolistas</b> (uno por línea).
+          </p>
           <textarea
             className="w-full h-36 p-3 rounded-lg bg-[#111528] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#4cafef]"
             placeholder={`Ej:\nMessi\nCristiano Ronaldo\nMbappé\nNeymar\nMaradona`}
             value={playersInput}
             onChange={(e) => setPlayersInput(e.target.value)}
           />
-          <button
-            onClick={startGame}
-            className="mt-4 w-full bg-[#4cafef] hover:bg-[#3196e8] px-4 py-2 rounded-lg font-semibold transition-colors"
-          >
-            Comenzar
-          </button>
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={() => {
+                setGameMode('selection');
+                setSelectedPreset(null);
+              }}
+              className="flex-1 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              Volver
+            </button>
+            <button
+              onClick={startGame}
+              className="flex-1 bg-[#4cafef] hover:bg-[#3196e8] px-4 py-2 rounded-lg font-semibold transition-colors"
+            >
+              Comenzar
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Cartas */}
-      {roles.length > 0 && (
+      {gameMode === 'playing' && (
         <>
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             {roles.map((role, i) => (
               <Card key={`${role}-${i}`} role={role} />
             ))}
           </div>
-
-          <button
-            onClick={resetGame}
-            className="mt-6 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg"
-          >
-            Reiniciar ronda
-          </button>
+          <div className="flex gap-4 mt-8">
+            <button
+              onClick={() => {
+                if (selectedPreset?.players?.length > 0) {
+                  // If using a preset, select a new random player from the preset
+                  const newPlayer = selectedPreset.players[
+                    Math.floor(Math.random() * selectedPreset.players.length)
+                  ];
+                  startGameWithPlayer(newPlayer);
+                } else {
+                  // If in custom mode, select a new random player from the input
+                  const players = playersInput
+                    .split("\n")
+                    .map(s => s.trim())
+                    .filter(Boolean);
+                  if (players.length > 0) {
+                    const newPlayer = players[Math.floor(Math.random() * players.length)];
+                    startGameWithPlayer(newPlayer);
+                  }
+                }
+              }}
+              className="bg-[#4cafef] hover:bg-[#3196e8] px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              Mezclar de nuevo
+            </button>
+            <button
+              onClick={resetGame}
+              className="bg-white/10 hover:bg-white/50 px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              Volver al inicio
+            </button>
+          </div>
         </>
       )}
     </main>
