@@ -10,6 +10,8 @@ export default function Home() {
   const [playersInput, setPlayersInput] = useState("");
   const [roles, setRoles] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState("");
+  const [innocentCount, setInnocentCount] = useState(4);
+  const [impostorCount, setImpostorCount] = useState(1);
 
   const handleSelectPreset = (presetId) => {
     const preset = getPresetById(presetId);
@@ -46,7 +48,9 @@ export default function Home() {
 
   const startGameWithPlayer = (player) => {
     setCurrentPlayer(player);
-    setRoles(shuffle([...Array(4).fill(player), "IMPOSTOR"]));
+    const innocents = Array(innocentCount).fill(player);
+    const impostors = Array(impostorCount).fill("IMPOSTOR");
+    setRoles(shuffle([...innocents, ...impostors]));
     setGameMode('playing');
   };
 
@@ -64,10 +68,34 @@ export default function Home() {
       
       {gameMode === 'selection' && (
         <>
-          <p className="opacity-80 mb-8 text-center max-w-2xl">
+          <p className="opacity-80 mb-4 text-center max-w-2xl">
             Elige un modo de juego con futbolistas precargados o personaliza tu propia lista.
-            El juego elegirá un jugador al azar y creará <b>5 cartas</b> (4 iguales y 1 <b>IMPOSTOR</b>).
+            El juego elegirá un jugador al azar y creará <b>{innocentCount + impostorCount} cartas</b> ({innocentCount} iguales y {impostorCount} <b>IMPOSTOR{impostorCount > 1 ? 'ES' : ''}</b>).
           </p>
+          <div className="mb-6 flex justify-center gap-4">
+            <div className="flex flex-col items-center">
+              <label className="text-sm text-gray-300 mb-1">Inocentes</label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={innocentCount}
+                onChange={(e) => setInnocentCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 p-2 rounded bg-[#111528] border border-white/10 text-center"
+              />
+            </div>
+            <div className="flex flex-col items-center">
+              <label className="text-sm text-gray-300 mb-1">Impostores</label>
+              <input
+                type="number"
+                min="1"
+                max="3"
+                value={impostorCount}
+                onChange={(e) => setImpostorCount(Math.min(3, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="w-20 p-2 rounded bg-[#111528] border border-white/10 text-center"
+              />
+            </div>
+          </div>
           <PresetSelector 
             onSelectPreset={handleSelectPreset}
             onContinue={handleContinueFromPreset}
@@ -80,6 +108,30 @@ export default function Home() {
           <p className="opacity-80 mb-4 text-center">
             Escribí <b>futbolistas</b> (uno por línea).
           </p>
+          <div className="flex justify-center gap-4 mb-4">
+            <div className="flex flex-col items-center">
+              <label className="text-sm text-gray-300 mb-1">Inocentes</label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={innocentCount}
+                onChange={(e) => setInnocentCount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-20 p-2 rounded bg-[#111528] border border-white/10 text-center"
+              />
+            </div>
+            <div className="flex flex-col items-center">
+              <label className="text-sm text-gray-300 mb-1">Impostores</label>
+              <input
+                type="number"
+                min="1"
+                max="3"
+                value={impostorCount}
+                onChange={(e) => setImpostorCount(Math.min(3, Math.max(1, parseInt(e.target.value) || 1)))}
+                className="w-20 p-2 rounded bg-[#111528] border border-white/10 text-center"
+              />
+            </div>
+          </div>
           <textarea
             className="w-full h-36 p-3 rounded-lg bg-[#111528] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#4cafef]"
             placeholder={`Ej:\nMessi\nCristiano Ronaldo\nMbappé\nNeymar\nMaradona`}
