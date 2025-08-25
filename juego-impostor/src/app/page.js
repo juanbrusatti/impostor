@@ -15,7 +15,10 @@ export default function Home() {
   const [currentPlayer, setCurrentPlayer] = useState("");
   const [innocentCount, setInnocentCount] = useState(4);
   const [impostorCount, setImpostorCount] = useState(1);
-  const [playerNames, setPlayerNames] = useState([]);
+  // Initialize playerNames with default names based on the initial innocent and impostor counts
+  const [playerNames, setPlayerNames] = useState(
+    Array(innocentCount + impostorCount).fill('').map((_, i) => `Jugador ${i + 1}`)
+  );
 
   const handleSelectPreset = (presetId) => {
     const preset = getPresetById(presetId);
@@ -31,6 +34,12 @@ export default function Home() {
       const randomPlayer = selectedPreset.players[
         Math.floor(Math.random() * selectedPreset.players.length)
       ];
+      // Ensure we have player names before starting the game
+      if (playerNames.length === 0) {
+        // If no player names are set, use default names
+        const defaultNames = Array(innocentCount + impostorCount).fill('').map((_, i) => `Jugador ${i + 1}`);
+        setPlayerNames(defaultNames);
+      }
       startGameWithPlayer(randomPlayer);
     }
   };
@@ -46,21 +55,74 @@ export default function Home() {
       return;
     }
 
+    // Ensure we have player names
+    if (playerNames.length === 0) {
+      // If no player names are set, use default names
+      const defaultNames = Array(innocentCount + impostorCount).fill('').map((_, i) => `Jugador ${i + 1}`);
+      setPlayerNames(defaultNames);
+    }
+
     const chosen = list[Math.floor(Math.random() * list.length)];
     startGameWithPlayer(chosen);
   };
 
   const startGameWithPlayer = (player) => {
     setCurrentPlayer(player);
-    
-    // Mantener la lógica original del juego
-    const innocents = Array(innocentCount).fill(player);
-    const impostors = Array(impostorCount).fill("IMPOSTOR");
-    setRoles(shuffle([...innocents, ...impostors]));
-    
-    // Los nombres de los jugadores se guardan pero no se usan para revelar quién es el impostor
-    // Se mantienen para futuras mejoras o para mostrar estadísticas
-    
+  
+    // Crear un array con los roles (INOCENTE/IMPOSTOR) para cada jugador
+    const rolesArray = [
+      ...Array(innocentCount).fill("INOCENTE"),
+      ...Array(impostorCount).fill("IMPOSTOR")
+    ];
+  
+    // Mezclar los roles
+    const shuffledRoles = shuffle(rolesArray);
+  
+    // Get a list of all available players from the selected preset or custom list
+    let availablePlayers = [];
+    if (selectedPreset?.players?.length > 0) {
+      availablePlayers = [...selectedPreset.players];
+    } else if (playersInput) {
+      availablePlayers = playersInput
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+  
+    // If no players available, use a default list
+    if (availablePlayers.length === 0) {
+      availablePlayers = [
+        'Messi', 'Cristiano Ronaldo', 'Neymar', 'Mbappé', 'Lewandowski',
+        'Benzema', 'Salah', 'Haaland', 'De Bruyne', 'Modrić'
+      ];
+    }
+
+    // Shuffle the available players to randomize the selection
+    const shuffledPlayers = shuffle([...availablePlayers]);
+  
+    // Create player objects with roles and player names
+    const playersWithRoles = shuffledRoles.map((role, index) => {
+      // For the impostor, just use the role
+      if (role === 'IMPOSTOR') {
+        return {
+          role,
+          name: playerNames[index] || `Jugador ${index + 1}`,
+          playerRole: 'IMPOSTOR',
+          isImpostor: true
+        };
+      }
+      
+      // For innocents, assign a random player from the list
+      const playerIndex = index % shuffledPlayers.length;
+      return {
+        role,
+        name: playerNames[index] || `Jugador ${index + 1}`,
+        playerRole: shuffledPlayers[playerIndex],
+        isImpostor: false
+      };
+    });
+  
+    setRoles(playersWithRoles);
     setGameMode('playing');
   };
 
@@ -90,7 +152,12 @@ export default function Home() {
   };
 
   const handleRoleSelectionContinue = (names) => {
-    setPlayerNames(names);
+    // Ensure we have valid names, otherwise use defaults
+    const validNames = names && names.length === innocentCount + impostorCount 
+      ? names 
+      : Array(innocentCount + impostorCount).fill('').map((_, i) => `Jugador ${i + 1}`);
+    
+    setPlayerNames(validNames);
     setView('game-selection');
   };
 
@@ -199,8 +266,13 @@ export default function Home() {
       {view !== 'mode-selection' && gameMode === 'playing' && (
         <>
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            {roles.map((role, i) => (
-              <Card key={`${role}-${i}`} role={role} />
+            {roles.map((player, i) => (
+              <Card 
+                key={i} 
+                role={player.role} 
+                playerName={player.name}
+                playerRole={player.playerRole}
+              />
             ))}
           </div>
           <div className="flex gap-4 mt-8">
@@ -258,7 +330,7 @@ function shuffle(arr) {
 }
 
 /* ---- Componente Carta ---- */
-function Card({ role }) {
+function Card({ role, playerName, playerRole }) {
   const [flipped, setFlipped] = useState(false);
 
   return (
@@ -273,17 +345,16 @@ function Card({ role }) {
         }`}
       >
         {/* Dorso */}
-        <div className="absolute inset-0 backface-hidden rounded-xl bg-[#4cafef] flex items-center justify-center text-4xl font-bold">
-          ?
+        <div className="absolute inset-0 backface-hidden rounded-xl bg-[#4cafef] flex items-center justify-center p-2">
+          <span className="text-white font-bold text-center break-words">{playerName || '?'}</span>
         </div>
 
         {/* Frente */}
-        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl bg-white text-black font-bold p-3 flex items-center justify-center text-center">
-          {role === "IMPOSTOR" ? (
-            <span className="text-red-600">IMPOSTOR</span>
-          ) : (
-            role
-          )}
+        <div className="absolute inset-0 backface-hidden rotate-y-180 rounded-xl bg-white text-black font-bold p-3 flex flex-col items-center justify-center text-center">
+          <span className="text-sm mb-2">{playerName}</span>
+          <span className={`text-lg font-bold ${role === "IMPOSTOR" ? 'text-red-600' : 'text-green-600'}`}>
+            {role === "IMPOSTOR" ? "IMPOSTOR" : playerRole || "INOCENTE"}
+          </span>
         </div>
       </div>
     </div>
