@@ -15,17 +15,24 @@ export const RoleSelector = ({
   const [localPlayerNames, setLocalPlayerNames] = useState(Array(innocentCount + impostorCount).fill(''));
 
   useEffect(() => {
+    console.log('RoleSelector: playerNames prop changed', playerNames);
     // Initialize with existing names or empty strings
-    if (playerNames && playerNames.length === innocentCount + impostorCount) {
+    const totalPlayers = innocentCount + impostorCount;
+    if (playerNames && playerNames.length === totalPlayers) {
+      console.log('Setting localPlayerNames from props:', playerNames);
       setLocalPlayerNames([...playerNames]);
     } else {
-      setLocalPlayerNames(Array(innocentCount + impostorCount).fill(''));
+      console.log('Initializing with empty player names');
+      const emptyNames = Array(totalPlayers).fill('');
+      setLocalPlayerNames(emptyNames);
+      onPlayerNamesChange(emptyNames);
     }
-  }, [innocentCount + impostorCount, playerNames]);
+  }, [innocentCount, impostorCount, playerNames]);
 
   const handleNameChange = (index, value) => {
     const newNames = [...localPlayerNames];
     newNames[index] = value;
+    console.log('Name changed at index', index, 'to:', value);
     setLocalPlayerNames(newNames);
     onPlayerNamesChange(newNames);
   };
