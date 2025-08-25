@@ -129,14 +129,6 @@ export default function Home() {
       {view === 'game-selection' && gameMode === 'selection' && (
         <>
           <div className="w-full max-w-2xl mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <button
-                onClick={() => setView('role-selection')}
-                className="text-[#4cafef] hover:underline flex items-center"
-              >
-                ← Ajustar roles
-              </button>
-            </div>
             <div className="flex justify-center">
               <div className="bg-[#2a2a3c] px-6 py-3 rounded-lg inline-flex items-center gap-4">
                 <span className="text-green-400 font-medium">{innocentCount} INOCENTE{innocentCount !== 1 ? 'S' : ''}</span>
@@ -146,34 +138,10 @@ export default function Home() {
             </div>
           </div>
           
-          <p className="opacity-80 mb-4 text-center max-w-2xl">
+          <p className="opacity-80 mb-8 text-center max-w-2xl">
             Elige una categoría de futbolistas para jugar o personaliza tu propia lista.
             El juego elegirá un jugador al azar y creará <b>{innocentCount + impostorCount} cartas</b>.
           </p>
-          <div className="mb-6 flex justify-center gap-4">
-            <div className="flex flex-col items-center">
-              <label className="text-sm text-gray-300 mb-1">Inocentes</label>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={innocentCount}
-                onChange={(e) => setInnocentCount(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-20 p-2 rounded bg-[#111528] border border-white/10 text-center"
-              />
-            </div>
-            <div className="flex flex-col items-center">
-              <label className="text-sm text-gray-300 mb-1">Impostores</label>
-              <input
-                type="number"
-                min="1"
-                max="3"
-                value={impostorCount}
-                onChange={(e) => setImpostorCount(Math.min(3, Math.max(1, parseInt(e.target.value) || 1)))}
-                className="w-20 p-2 rounded bg-[#111528] border border-white/10 text-center"
-              />
-            </div>
-          </div>
           <PresetSelector 
             onSelectPreset={handleSelectPreset}
             onContinue={handleContinueFromPreset}
@@ -219,16 +187,6 @@ export default function Home() {
           />
           <div className="flex gap-4 mt-4">
             <button
-              onClick={() => {
-                setView('game-selection');
-                setGameMode('selection');
-                setSelectedPreset(null);
-              }}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              Volver
-            </button>
-            <button
               onClick={startGame}
               className="flex-1 bg-[#4cafef] hover:bg-[#3196e8] px-4 py-2 rounded-lg font-semibold transition-colors"
             >
@@ -271,10 +229,16 @@ export default function Home() {
               Mezclar de nuevo
             </button>
             <button
-              onClick={handleBackToGameSelection}
-              className="bg-white/10 hover:bg-white/50 px-6 py-2 rounded-lg font-medium transition-colors"
+              onClick={() => {
+                setView('game-selection');
+                setGameMode('selection');
+              }}
+              className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-2 rounded-lg font-medium transition-colors"
             >
-              Volver atrás
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Volver
             </button>
           </div>
         </>
