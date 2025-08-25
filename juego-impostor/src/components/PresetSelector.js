@@ -23,7 +23,7 @@ const PresetCard = ({ preset, isSelected, onClick }) => {
   );
 };
 
-export const PresetSelector = ({ onSelectPreset, onContinue }) => {
+export const PresetSelector = ({ onSelectPreset, onContinue, onBack }) => {
   const [selectedPreset, setSelectedPreset] = useState(null);
 
   const handleSelect = (presetId) => {
@@ -33,7 +33,19 @@ export const PresetSelector = ({ onSelectPreset, onContinue }) => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-8">Elige un modo de juego</h2>
+      <div className="flex items-center justify-between mb-8">
+        <button
+          onClick={onBack}
+          className="flex items-center text-gray-300 hover:text-white transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+          Volver
+        </button>
+        <h2 className="text-2xl font-bold text-center flex-grow">Elige una categoria de futbolistas</h2>
+        <div className="w-20"></div> {/* Spacer for alignment */}
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {Object.values(playerPresets).map((preset) => (
