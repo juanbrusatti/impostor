@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+# Juego del Impostor ⚽
 
-First, run the development server:
+Este proyecto es una aplicación web interactiva para jugar al "Juego del Impostor" con futbolistas. Permite seleccionar una categoría de jugadores, personalizar la lista, asignar roles y mostrar cartas para cada participante.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Características
+- Selección de categorías de futbolistas (presets precargados y opción personalizada)
+- Personalización de la lista de jugadores
+- Asignación de roles: inocentes e impostores
+- Visualización de cartas interactivas para cada jugador
+- Diseño responsivo y optimizado para dispositivos móviles
+- Scroll automático en la vista de cartas para grupos grandes
+- Interfaz moderna con React, Next.js y Tailwind CSS
+
+## Instalación
+1. Clona el repositorio:
+	```bash
+	git clone https://github.com/tu-usuario/juego-impostor.git
+	```
+2. Instala las dependencias:
+	```bash
+	cd juego-impostor
+	npm install
+	```
+3. Inicia el servidor de desarrollo:
+	```bash
+	npm run dev
+	```
+4. Abre la app en tu navegador en `http://localhost:3000`
+
+## Estructura del proyecto
+```
+├── src/
+│   ├── app/
+│   │   ├── layout.js
+│   │   ├── page.js
+│   │   └── globals.css
+│   ├── components/
+│   │   ├── GameModeSelector.js
+│   │   ├── PresetSelector.js
+│   │   ├── RoleSelector.js
+│   └── data/
+│       └── playerPresets.js
+├── public/
+│   └── ... (assets)
+├── package.json
+├── tailwind.config.js
+├── next.config.mjs
+└── README.md
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tecnologías utilizadas
+- React
+- Next.js
+- Tailwind CSS
+- PostCSS
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Uso
+1. Selecciona el modo de juego y la categoría de futbolistas.
+2. Personaliza la lista si lo deseas.
+3. Configura la cantidad de inocentes e impostores.
+4. Visualiza las cartas y juega con tu grupo.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Contribuciones
+¡Las contribuciones son bienvenidas! Puedes abrir issues o enviar pull requests para mejorar el juego.
 
-## Learn More
+## Licencia
+Este proyecto está bajo la licencia MIT.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+Hecho con ❤️ por Delay 🐢 y colaboradores.
