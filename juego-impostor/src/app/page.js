@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { PresetSelector } from "@/components/PresetSelector";
 import { GameModeSelector } from "@/components/GameModeSelector";
+import { RoleSelector } from "@/components/RoleSelector";
 import { getPresetById } from "@/data/playerPresets";
 
 export default function Home() {
-  const [view, setView] = useState("mode-selection"); // 'mode-selection' | 'game-selection' | 'custom' | 'playing'
+  const [view, setView] = useState("mode-selection"); // 'mode-selection' | 'role-selection' | 'game-selection' | 'custom' | 'playing'
   const [gameMode, setGameMode] = useState("selection"); // 'selection' | 'custom' | 'playing'
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [playersInput, setPlayersInput] = useState("");
@@ -14,6 +15,7 @@ export default function Home() {
   const [currentPlayer, setCurrentPlayer] = useState("");
   const [innocentCount, setInnocentCount] = useState(4);
   const [impostorCount, setImpostorCount] = useState(1);
+  const [playerNames, setPlayerNames] = useState([]);
 
   const handleSelectPreset = (presetId) => {
     const preset = getPresetById(presetId);
@@ -50,9 +52,15 @@ export default function Home() {
 
   const startGameWithPlayer = (player) => {
     setCurrentPlayer(player);
+    
+    // Mantener la lógica original del juego
     const innocents = Array(innocentCount).fill(player);
     const impostors = Array(impostorCount).fill("IMPOSTOR");
     setRoles(shuffle([...innocents, ...impostors]));
+    
+    // Los nombres de los jugadores se guardan pero no se usan para revelar quién es el impostor
+    // Se mantienen para futuras mejoras o para mostrar estadísticas
+    
     setGameMode('playing');
   };
 
@@ -67,7 +75,7 @@ export default function Home() {
 
   const handleSelectGameMode = (mode) => {
     if (mode === 'local') {
-      setView('game-selection');
+      setView('role-selection');
     }
     // For 'online', we don't need to do anything as the button is disabled
   };
@@ -77,8 +85,17 @@ export default function Home() {
   };
 
   const handleBackToGameSelection = () => {
-    setView('game-selection');
+    setView('role-selection');
     setGameMode('selection');
+  };
+
+  const handleRoleSelectionContinue = (names) => {
+    setPlayerNames(names);
+    setView('game-selection');
+  };
+
+  const handlePlayerNamesChange = (names) => {
+    setPlayerNames(names);
   };
 
   return (
@@ -89,11 +106,49 @@ export default function Home() {
         <GameModeSelector onSelectMode={handleSelectGameMode} />
       )}
 
+      {view === 'role-selection' && (
+        <div className="w-full max-w-2xl mx-auto">
+          <button
+            onClick={handleBackToModeSelection}
+            className="mb-6 text-[#4cafef] hover:underline flex items-center"
+          >
+            ← Volver a selección de modo
+          </button>
+          <RoleSelector
+            innocentCount={innocentCount}
+            impostorCount={impostorCount}
+            onInnocentChange={setInnocentCount}
+            onImpostorChange={setImpostorCount}
+            playerNames={playerNames}
+            onPlayerNamesChange={handlePlayerNamesChange}
+            onContinue={handleRoleSelectionContinue}
+          />
+        </div>
+      )}
+
       {view === 'game-selection' && gameMode === 'selection' && (
         <>
+          <div className="w-full max-w-2xl mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <button
+                onClick={() => setView('role-selection')}
+                className="text-[#4cafef] hover:underline flex items-center"
+              >
+                ← Ajustar roles
+              </button>
+            </div>
+            <div className="flex justify-center">
+              <div className="bg-[#2a2a3c] px-6 py-3 rounded-lg inline-flex items-center gap-4">
+                <span className="text-green-400 font-medium">{innocentCount} INOCENTE{innocentCount !== 1 ? 'S' : ''}</span>
+                <span className="text-gray-400">|</span>
+                <span className="text-red-400 font-medium">{impostorCount} IMPOSTOR{impostorCount !== 1 ? 'ES' : ''}</span>
+              </div>
+            </div>
+          </div>
+          
           <p className="opacity-80 mb-4 text-center max-w-2xl">
-            Elige una categoria de futbolistas para jugar o personaliza tu propia lista.
-            El juego elegirá un jugador al azar y creará <b>{innocentCount + impostorCount} cartas</b> ({innocentCount} iguales y {impostorCount} <b>IMPOSTOR{impostorCount > 1 ? 'ES' : ''}</b>).
+            Elige una categoría de futbolistas para jugar o personaliza tu propia lista.
+            El juego elegirá un jugador al azar y creará <b>{innocentCount + impostorCount} cartas</b>.
           </p>
           <div className="mb-6 flex justify-center gap-4">
             <div className="flex flex-col items-center">
