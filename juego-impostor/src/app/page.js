@@ -215,6 +215,7 @@ return (
     {view === 'mode-selection' && (
       <div className="w-full max-w-md mx-auto mt-12">
         <h1 className="text-3xl sm:text-4xl font-bold mb-8 text-center">Juego del Impostor ⚽</h1>
+        <h3 className="text-lg mb-6 text-center opacity-80">By: Delay 🐢</h3>
         <GameModeSelector onSelectMode={handleSelectGameMode} />
       </div>
     )}
@@ -326,9 +327,12 @@ return (
       <div className="fixed inset-0 bg-[#1e1e2f] flex flex-col items-center justify-center p-4 z-50">
         <div className="w-full max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold mb-8 text-center">¡A Jugar!</h2>
-          
-          <div className="flex flex-wrap justify-center gap-4 md:gap-6 px-4 max-w-6xl mx-auto">
-          {roles.map((player, i) => (
+          {/* Contenedor con scroll si hay más de 8 cartas */}
+          <div
+            className={`flex flex-wrap justify-center gap-4 md:gap-6 px-4 max-w-6xl mx-auto ${roles.length > 8 ? 'overflow-y-auto' : ''}`}
+            style={roles.length > 8 ? { maxHeight: '60vh' } : {}}
+          >
+            {roles.map((player, i) => (
               <Card 
                 key={i}
                 role={player.role}
@@ -338,7 +342,6 @@ return (
               />
             ))}
           </div>
-          
           <div className="mt-8 flex justify-center gap-4">
             <button
               onClick={() => {
