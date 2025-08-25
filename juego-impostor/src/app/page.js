@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { PresetSelector } from "@/components/PresetSelector";
+import { GameModeSelector } from "@/components/GameModeSelector";
 import { getPresetById } from "@/data/playerPresets";
 
 export default function Home() {
+  const [view, setView] = useState("mode-selection"); // 'mode-selection' | 'game-selection' | 'custom' | 'playing'
   const [gameMode, setGameMode] = useState("selection"); // 'selection' | 'custom' | 'playing'
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [playersInput, setPlayersInput] = useState("");
@@ -55,6 +57,7 @@ export default function Home() {
   };
 
   const resetGame = () => {
+    setView('mode-selection');
     setGameMode('selection');
     setSelectedPreset(null);
     setPlayersInput("");
@@ -62,14 +65,34 @@ export default function Home() {
     setCurrentPlayer("");
   };
 
+  const handleSelectGameMode = (mode) => {
+    if (mode === 'local') {
+      setView('game-selection');
+    }
+    // For 'online', we don't need to do anything as the button is disabled
+  };
+
+  const handleBackToModeSelection = () => {
+    setView('mode-selection');
+  };
+
+  const handleBackToGameSelection = () => {
+    setView('game-selection');
+    setGameMode('selection');
+  };
+
   return (
     <main className="min-h-screen bg-[#1e1e2f] text-white flex flex-col items-center p-6">
       <h1 className="text-3xl sm:text-4xl font-bold mb-4">Juego del Impostor ⚽</h1>
       
-      {gameMode === 'selection' && (
+      {view === 'mode-selection' && (
+        <GameModeSelector onSelectMode={handleSelectGameMode} />
+      )}
+
+      {view === 'game-selection' && gameMode === 'selection' && (
         <>
           <p className="opacity-80 mb-4 text-center max-w-2xl">
-            Elige un modo de juego con futbolistas precargados o personaliza tu propia lista.
+            Elige una categoria de futbolistas para jugar o personaliza tu propia lista.
             El juego elegirá un jugador al azar y creará <b>{innocentCount + impostorCount} cartas</b> ({innocentCount} iguales y {impostorCount} <b>IMPOSTOR{impostorCount > 1 ? 'ES' : ''}</b>).
           </p>
           <div className="mb-6 flex justify-center gap-4">
@@ -99,11 +122,12 @@ export default function Home() {
           <PresetSelector 
             onSelectPreset={handleSelectPreset}
             onContinue={handleContinueFromPreset}
+            onBack={handleBackToModeSelection}
           />
         </>
       )}
 
-      {gameMode === 'custom' && (
+      {view !== 'mode-selection' && gameMode === 'custom' && (
         <div className="w-full max-w-lg mt-4">
           <p className="opacity-80 mb-4 text-center">
             Escribí <b>futbolistas</b> (uno por línea).
@@ -141,6 +165,7 @@ export default function Home() {
           <div className="flex gap-4 mt-4">
             <button
               onClick={() => {
+                setView('game-selection');
                 setGameMode('selection');
                 setSelectedPreset(null);
               }}
@@ -158,7 +183,7 @@ export default function Home() {
         </div>
       )}
 
-      {gameMode === 'playing' && (
+      {view !== 'mode-selection' && gameMode === 'playing' && (
         <>
           <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             {roles.map((role, i) => (
@@ -191,10 +216,10 @@ export default function Home() {
               Mezclar de nuevo
             </button>
             <button
-              onClick={resetGame}
+              onClick={handleBackToGameSelection}
               className="bg-white/10 hover:bg-white/50 px-6 py-2 rounded-lg font-medium transition-colors"
             >
-              Volver al inicio
+              Volver atrás
             </button>
           </div>
         </>

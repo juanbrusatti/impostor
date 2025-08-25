@@ -13,6 +13,7 @@ export const playerPresets = {
       'Martin Ødegaard',
       'Marcus Rashford',
       'Trent Alexander-Arnold'
+
     ]
   },
   argentinian: {
@@ -28,7 +29,25 @@ export const playerPresets = {
       'Cristian Romero',
       'Julián Álvarez',
       'Leandro Paredes',
-      'Nicolás Otamendi'
+      'Nicolás Otamendi',
+      'Óscar Ruggeri',
+      'Marcos Rojo',
+      'Enzo Pérez',
+      'Mario Kempes',
+      'Erling Haaland',
+      'Kevin De Bruyne',
+      'Mohamed Salah',
+      'Harry Kane',
+      'Virgil van Dijk',
+      'Bruno Fernandes',
+      'Bukayo Saka',
+      'Martin Ødegaard',
+      'Marcus Rashford',
+      'Trent Alexander-Arnold',
+      'Manuel Neuer',
+      'Virgil van Dijk',
+      'Sergio Ramos',
+      'Gerard Piqué'   
     ]
   },
   europeanStars: {
