@@ -97,8 +97,8 @@ export default function Home() {
       ];
     }
 
-    // Shuffle the available players to randomize the selection
-    const shuffledPlayers = shuffle([...availablePlayers]);
+    // Select one random player for all innocent cards
+    const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
   
     // Create player objects with roles and player names
     const playersWithRoles = shuffledRoles.map((role, index) => {
@@ -112,12 +112,11 @@ export default function Home() {
         };
       }
       
-      // For innocents, assign a random player from the list
-      const playerIndex = index % shuffledPlayers.length;
+      // For innocents, use the same random player
       return {
         role,
         name: playerNames[index] || `Jugador ${index + 1}`,
-        playerRole: shuffledPlayers[playerIndex],
+        playerRole: randomPlayer,
         isImpostor: false
       };
     });
