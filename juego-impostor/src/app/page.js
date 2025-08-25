@@ -327,8 +327,8 @@ return (
         <div className="w-full max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold mb-8 text-center">¡A Jugar!</h2>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {roles.map((player, i) => (
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6 px-4 max-w-6xl mx-auto">
+          {roles.map((player, i) => (
               <Card 
                 key={i}
                 role={player.role}
