@@ -8,8 +8,8 @@ const PresetCard = ({ preset, isSelected, onClick }) => {
     <div 
       className={`p-6 rounded-lg cursor-pointer transition-all duration-200 border-2 ${
         isSelected 
-          ? 'border-blue-500 bg-blue-50 scale-105' 
-          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+          ? 'border-blue-500 hover:bg-[#3196e8] scale-109' 
+          : 'border-gray-200 hover:border-gray-300 hover:bg-[#3196e8]'
       }`}
       onClick={onClick}
     >
