@@ -14,6 +14,8 @@ export default function Home() {
   const [roles, setRoles] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState("");
   const [innocentCount, setInnocentCount] = useState(4);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [shuffleKey, setShuffleKey] = useState(0);
   const [impostorCount, setImpostorCount] = useState(1);
   // Initialize playerNames with default names based on the initial innocent and impostor counts
   const [playerNames, setPlayerNames] = useState(
@@ -328,23 +330,57 @@ return (
         <div className="w-full max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold mb-8 text-center">¡A Jugar!</h2>
           {/* Contenedor con scroll si hay más de 8 cartas */}
-          <div
-            className={`flex flex-wrap justify-center gap-4 md:gap-6 px-4 max-w-6xl mx-auto ${roles.length > 8 ? 'overflow-y-auto' : ''}`}
+          <div 
+            className={`relative flex flex-wrap justify-center gap-4 md:gap-6 px-4 max-w-6xl mx-auto transition-all duration-300 ${roles.length > 8 ? 'overflow-y-auto' : ''}`}
             style={roles.length > 8 ? { maxHeight: '60vh' } : {}}
+            key={shuffleKey}
           >
-            {roles.map((player, i) => (
-              <Card 
-                key={i}
-                role={player.role}
-                playerName={player.role === 'IMPOSTOR' ? 'IMPOSTOR' : player.name}
-                playerRole={player.playerRole}
-                playerRealName={player.realName || `Jugador ${i + 1}`}
-              />
-            ))}
+            {roles.map((player, i) => {
+              const total = roles.length;
+              const angle = (i / total) * Math.PI * 2;
+              const radius = isShuffling ? 0 : 100; // Radius of the circle
+              const x = Math.cos(angle) * radius;
+              const y = Math.sin(angle) * radius;
+              
+              return (
+                <div 
+                  key={i}
+                  className={`transition-all duration-500 ${isShuffling ? 'opacity-100' : 'opacity-100'}`}
+                  style={{
+                    transform: isShuffling 
+                      ? 'translate(0, 0) scale(1.2)' 
+                      : 'translate(0, 0) scale(1)',
+                    zIndex: isShuffling ? 10 : 1,
+                    position: 'relative',
+                    transition: 'all 0.5s ease-in-out'
+                  }}
+                >
+                  <Card 
+                    role={player.role}
+                    playerName={player.role === 'IMPOSTOR' ? 'IMPOSTOR' : player.name}
+                    playerRole={player.playerRole}
+                    playerRealName={player.realName || `Jugador ${i + 1}`}
+                  />
+                </div>
+              );
+            })}
           </div>
           <div className="mt-8 flex justify-center gap-4">
             <button
-              onClick={() => {
+              onClick={async () => {
+                // Start the shuffle animation
+                setIsShuffling(true);
+                
+                // Wait for cards to gather in the center
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Change the key to force re-render of cards with new positions
+                setShuffleKey(prev => prev + 1);
+                
+                // Wait a bit before starting the shuffle
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // Perform the actual shuffle logic
                 if (selectedPreset?.players?.length > 0) {
                   const randomPlayer = selectedPreset.players[
                     Math.floor(Math.random() * selectedPreset.players.length)
@@ -360,8 +396,16 @@ return (
                     startGameWithPlayer(newPlayer);
                   }
                 }
+                
+                // Wait for cards to return to their positions
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Reset shuffle state after animation completes
+                setIsShuffling(false);
               }}
-              className="bg-[#4cafef] hover:bg-[#3196e8] px-6 py-3 rounded-lg font-semibold transition-colors flex items-center gap-2"
+              className={`bg-[#4cafef] hover:bg-[#3196e8] px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 ${isShuffling ? 'animate-pulse' : ''}`}
+              disabled={isShuffling}
+              disabled={isShuffling}
             >
               Mezclar de nuevo
             </button>
