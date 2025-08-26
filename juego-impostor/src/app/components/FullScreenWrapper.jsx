@@ -48,13 +48,12 @@ export default function FullScreenWrapper({ children }) {
       meta.setAttribute('content', 'yes');
       document.head.appendChild(meta);
 
-      // Prevent bounce effect on iOS
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
+      // Better scroll handling for iOS
+      document.body.style.overflow = 'auto';
+      document.body.style.position = 'relative';
       document.body.style.width = '100%';
-      document.body.style.height = '100%';
-      document.body.style.top = '0';
-      document.body.style.left = '0';
+      document.body.style.height = 'auto';
+      document.body.style.minHeight = '100vh';
 
       // Add to home screen prompt
       window.addEventListener('beforeinstallprompt', (e) => {
@@ -98,5 +97,15 @@ export default function FullScreenWrapper({ children }) {
     };
   }, [pathname]);
 
-  return <div style={{ height: '100vh', width: '100vw', overflow: 'hidden' }}>{children}</div>;
+  return (
+    <div style={{
+      minHeight: '100vh',
+      width: '100%',
+      overflow: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      position: 'relative'
+    }}>
+      {children}
+    </div>
+  );
 }
