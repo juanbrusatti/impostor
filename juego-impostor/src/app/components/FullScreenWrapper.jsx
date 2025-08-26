@@ -7,6 +7,7 @@ export default function FullScreenWrapper({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Only run on client-side
     if (typeof window === 'undefined') return;
 
     const handleFullscreenChange = () => {
