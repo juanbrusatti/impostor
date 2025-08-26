@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TU_TEAM_ID.com.tudominio.impostor",
+        "paths": ["*"]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TU_TEAM_ID.com.tudominio.impostor"
+    ]
+  },
+  "appclips": {
+    "apps": ["TU_TEAM_ID.com.tudominio.impostor.Clip"]
+  }
+}

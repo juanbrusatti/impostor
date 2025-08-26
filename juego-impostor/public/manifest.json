@@ -1,22 +1,63 @@
 {
-    "name": "Juego del Impostor",
-    "short_name": "Impostor",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#1e1e2f",
-    "theme_color": "#4cafef",
-    "orientation": "portrait",
-    "icons": [
-      {
-        "src": "/icon-192.png",
-        "sizes": "192x192",
-        "type": "image/png"
-      },
-      {
-        "src": "/icon-512.png",
-        "sizes": "512x512",
-        "type": "image/png"
-      }
-    ]
-  }
+  "name": "Juego del Impostor",
+  "short_name": "Impostor",
+  "description": "Juego del impostor - Diviértete con tus amigos",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "background_color": "#1e1e2f",
+  "theme_color": "#1e1e2f",
+  "orientation": "portrait",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "categories": ["games", "entertainment"],
+  "screenshots": [
+    {
+      "src": "/screenshot1.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot2.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuevo Juego",
+      "short_name": "Jugar",
+      "description": "Comenzar un nuevo juego",
+      "url": "/nuevo-juego"
+    },
+    {
+      "name": "Cómo Jugar",
+      "short_name": "Ayuda",
+      "description": "Aprende a jugar",
+      "url": "/ayuda"
+    }
+  ]
+}
   
