@@ -31,6 +31,10 @@ export const RoleSelector = ({
 
   const handleNameChange = (index, value) => {
     const newNames = [...localPlayerNames];
+    // Ensure we have the right length for the array
+    while (newNames.length <= index) {
+      newNames.push('');
+    }
     newNames[index] = value;
     setLocalPlayerNames(newNames);
     onPlayerNamesChange(newNames);
@@ -49,11 +53,6 @@ export const RoleSelector = ({
   };
 
   const renderNameInputs = () => {
-    // Initialize with default names if not set
-    const names = localPlayerNames.length === innocentCount + impostorCount 
-      ? localPlayerNames 
-      : Array(innocentCount + impostorCount).fill('');
-      
     return (
       <div className="space-y-6">
         <h3 className="text-xl font-semibold text-center mb-4">Ingresa los nombres de los jugadores</h3>
@@ -65,7 +64,7 @@ export const RoleSelector = ({
               </label>
               <input
                 type="text"
-                value=""
+                value={localPlayerNames[index] === `Jugador ${index + 1}` ? '' : (localPlayerNames[index] || '')}
                 onChange={(e) => handleNameChange(index, e.target.value)}
                 className="w-full p-3 rounded-lg bg-[#111528] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#4cafef] transition-colors"
                 placeholder={`Jugador ${index + 1}`}
