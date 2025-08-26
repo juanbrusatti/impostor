@@ -1,16 +1,15 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import FullScreenHandler from "@/components/FullScreenHandler";
+import FullScreenWrapper from "./components/FullScreenWrapper";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
+  userScalable: false,
+  themeColor: '#1e1e2f',
+};
 
 export const metadata = {
   title: "Juego del Impostor",
@@ -19,13 +18,6 @@ export const metadata = {
   keywords: ["juego", "impostor", "diversión", "amigos", "party game"],
   authors: [{ name: "Tu Nombre" }],
   themeColor: "#1e1e2f",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    viewportFit: "cover",
-    userScalable: false
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -47,13 +39,25 @@ export const metadata = {
   },
 };
 
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+  display: 'swap',
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: 'swap',
+});
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="es">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <FullScreenWrapper>
+          {children}
+        </FullScreenWrapper>
       </body>
     </html>
   );
