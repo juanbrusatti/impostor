@@ -2,15 +2,26 @@
   "name": "Juego del Impostor",
   "short_name": "Impostor",
   "description": "Juego del impostor - Diviértete con tus amigos",
-  "start_url": "/",
-  "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "start_url": "/?source=pwa",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone", "browser"],
   "background_color": "#1e1e2f",
   "theme_color": "#1e1e2f",
   "orientation": "portrait",
   "scope": "/",
   "prefer_related_applications": false,
   "categories": ["games", "entertainment"],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "shortcuts": [
+    {
+      "name": "Jugar ahora",
+      "short_name": "Jugar",
+      "description": "Comenzar un nuevo juego",
+      "url": "/?source=pwa&game=new"
+    }
+  ],
   "screenshots": [
     {
       "src": "/screenshot1.png",
