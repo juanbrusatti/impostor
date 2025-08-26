@@ -27,7 +27,7 @@ export const RoleSelector = ({
       setLocalPlayerNames(emptyNames);
       onPlayerNamesChange(emptyNames);
     }
-  }, [innocentCount, impostorCount, playerNames]);
+  }, [innocentCount, impostorCount, playerNames, onPlayerNamesChange]);
 
   const handleNameChange = (index, value) => {
     const newNames = [...localPlayerNames];

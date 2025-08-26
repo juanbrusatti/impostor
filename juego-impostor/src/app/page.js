@@ -405,7 +405,6 @@ return (
               }}
               className={`bg-[#4cafef] hover:bg-[#3196e8] px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 ${isShuffling ? 'animate-pulse' : ''}`}
               disabled={isShuffling}
-              disabled={isShuffling}
             >
               Mezclar de nuevo
             </button>
