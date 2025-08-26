@@ -50,9 +50,9 @@ export const RoleSelector = ({
   };
 
   const renderNameInputs = () => (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-center">Ingresa los nombres de los jugadores</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <div className="space-y-6">
+      <h3 className="text-xl font-semibold text-center mb-4">Ingresa los nombres de los jugadores</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {Array.from({ length: innocentCount + impostorCount }).map((_, index) => (
           <div key={index} className="space-y-1">
             <label className="text-sm text-gray-300">
@@ -62,7 +62,7 @@ export const RoleSelector = ({
               type="text"
               value={localPlayerNames[index] || ''}
               onChange={(e) => handleNameChange(index, e.target.value)}
-              className="w-full p-2 rounded bg-[#111528] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#4cafef]"
+              className="w-full p-3 rounded-lg bg-[#111528] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#4cafef] transition-colors"
               placeholder={`Jugador ${index + 1}`}
             />
           </div>
@@ -72,10 +72,10 @@ export const RoleSelector = ({
   );
 
   const renderRoleSelector = () => (
-    <div>
-      <div className="space-y-2">
-        <label className="block text-lg font-medium">Cantidad de Inocentes</label>
-        <div className="flex items-center space-x-4">
+    <div className="space-y-8">
+      <div className="space-y-2 text-center">
+        <label className="block text-lg font-medium mb-2">Cantidad de Inocentes</label>
+        <div className="flex items-center justify-center space-x-4">
           <button 
             onClick={() => onInnocentChange(Math.max(1, innocentCount - 1))}
             className="px-4 py-2 bg-[#4cafef] rounded-lg hover:bg-[#3196e8] transition-colors"
@@ -92,9 +92,9 @@ export const RoleSelector = ({
         </div>
       </div>
 
-      <div className="space-y-2 mt-6">
-        <label className="block text-lg font-medium">Cantidad de Impostores</label>
-        <div className="flex items-center space-x-4">
+      <div className="space-y-2 text-center">
+        <label className="block text-lg font-medium mb-2">Cantidad de Impostores</label>
+        <div className="flex items-center justify-center space-x-4">
           <button 
             onClick={() => onImpostorChange(Math.max(1, impostorCount - 1))}
             className="px-4 py-2 bg-[#ff4d4d] rounded-lg hover:bg-[#e83f3f] transition-colors"
@@ -111,37 +111,25 @@ export const RoleSelector = ({
         </div>
       </div>
 
-      <div className="pt-6">
-        <p className="text-center text-gray-300">
-          Total de jugadores: <span className="font-bold">{innocentCount + impostorCount}</span>
+      <div className="pt-6 border-t border-gray-700">
+        <p className="text-center text-gray-300 text-lg">
+          Total de jugadores: <span className="font-bold text-xl text-white">{innocentCount + impostorCount}</span>
         </p>
-        <p className="text-sm text-center text-gray-400 mt-1">
+        <p className="text-center text-gray-400 mt-2">
           {innocentCount} Inocente{innocentCount !== 1 ? 's' : ''} y {impostorCount} Impostor{impostorCount !== 1 ? 'es' : ''}
         </p>
       </div>
     </div>
   );
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-md mx-auto px-4">
       <h2 className="text-2xl font-bold text-center mb-8">Configura los roles</h2>
       
-      <div className="space-y-6 bg-[#2a2a3c] p-6 rounded-lg">
-        {showNameInputs ? renderNameInputs() : renderRoleSelector()}
-        
-        <button
-          onClick={handleContinueClick}
-          className="w-full py-3 bg-[#4cafef] hover:bg-[#3196e8] text-white font-semibold rounded-lg transition-colors mt-6"
-        >
-          {showNameInputs ? 'Continuar al juego' : 'Siguiente: Ingresar jugadores'}
-        </button>
-        
-        {showNameInputs && (
-          <button
-            onClick={() => setShowNameInputs(false)}
-            className="w-full py-2 text-[#4cafef] hover:underline mt-2"
-          >
-            ← Volver a ajustar roles
-          </button>
+      <div className="space-y-6 bg-[#2a2a3c] p-8 rounded-lg shadow-lg">
+        {showNameInputs ? renderNameInputs() : (
+          <div className="space-y-8">
+            {renderRoleSelector()}
+          </div>
         )}
       </div>
     </div>
