@@ -14,6 +14,7 @@ export default function Home() {
   const [roles, setRoles] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState("");
   const [innocentCount, setInnocentCount] = useState(4);
+  const [flippedCards, setFlippedCards] = useState([]);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffleKey, setShuffleKey] = useState(0);
   const [impostorCount, setImpostorCount] = useState(1);
@@ -81,8 +82,19 @@ export default function Home() {
     }, 0);
   };
 
+  const handleCardFlip = (index) => {
+    setFlippedCards(prev => {
+      // If this card hasn't been flipped before, add it to the flipped cards
+      if (!prev.includes(index)) {
+        return [...prev, index];
+      }
+      return prev;
+    });
+  };
+
   const startGameWithPlayer = (player, names = []) => {
     setCurrentPlayer(player);
+    setFlippedCards([]); // Reset flipped cards when starting a new game
     
     // Use the provided names or fall back to state/localStorage
     let currentPlayerNames = names.length > 0 ? [...names] : [...playerNames];
@@ -166,6 +178,7 @@ export default function Home() {
     setPlayersInput("");
     setRoles([]);
     setCurrentPlayer("");
+    setFlippedCards([]);
   };
 
   const handleSelectGameMode = (mode) => {
@@ -215,9 +228,11 @@ const handlePlayerNamesChange = (names) => {
 return (
   <main className="min-h-screen bg-[#1e1e2f] text-white flex flex-col items-center p-6">
     {view === 'mode-selection' && (
-      <div className="w-full max-w-md mx-auto mt-12">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-8 text-center">Juego del Impostor ⚽</h1>
-        <h3 className="text-lg mb-6 text-center opacity-80">By: Delay 🐢</h3>
+      <div className="min-h-screen bg-[#1e1e2f] text-white p-4 flex flex-col">
+        <header className="mb-4 sm:mb-6 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">¿Quién es el impostor?</h1>
+          <p className="text-sm sm:text-base text-gray-300">Toca una carta para ver el rol</p>
+        </header>
         <GameModeSelector onSelectMode={handleSelectGameMode} />
       </div>
     )}
@@ -356,27 +371,32 @@ return (
                 ? `translate(${xCenter - x0}px, ${yCenter - y0}px) scale(1.1)`
                 : `translate(0px, 0px) scale(1)`;
               return (
-                <div 
-                  key={i}
-                  className={`transition-all duration-500`}
-                  style={{
-                    transform,
-                    zIndex: isShuffling ? 10 : 1,
-                    position: 'relative',
-                    transition: 'all 0.5s cubic-bezier(0.77,0,0.175,1)'
-                  }}
-                >
-                  <Card 
-                    role={player.role}
-                    playerName={player.role === 'IMPOSTOR' ? 'IMPOSTOR' : player.name}
-                    playerRole={player.playerRole}
-                    playerRealName={player.realName || `Jugador ${i + 1}`}
-                  />
-                </div>
+                <Card
+                  key={`${i}-${shuffleKey}`}
+                  index={i}
+                  role={player.role}
+                  playerName={player.name}
+                  playerRole={player.playerRole}
+                  playerRealName={player.realName}
+                  onFlip={handleCardFlip}
+                />
               );
             })}
           </div>
-          <div className="mt-8 flex justify-center gap-4">
+          
+          {/* Voting button - Only show when all cards have been flipped at least once */}
+          {flippedCards.length === roles.length && roles.length > 0 && (
+            <div className="flex justify-center mt-4 sm:mt-6 px-4">
+              <button 
+                className="w-full max-w-xs px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transform transition-all hover:scale-105 text-base sm:text-lg"
+                onClick={() => console.log('Voting started!')}
+              >
+                Votar
+              </button>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 justify-center mt-6 sm:mt-8 px-2">
             <button
               onClick={async () => {
                 // Start the shuffle animation
@@ -414,7 +434,7 @@ return (
                 // Reset shuffle state after animation completes
                 setIsShuffling(false);
               }}
-              className={`bg-[#4cafef] hover:bg-[#3196e8] px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 ${isShuffling ? 'animate-pulse' : ''}`}
+              className={`bg-[#4cafef] hover:bg-[#3196e8] px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${isShuffling ? 'animate-pulse' : ''}`}
               disabled={isShuffling}
             >
               Mezclar de nuevo
@@ -424,7 +444,7 @@ return (
                 setView('game-selection');
                 setGameMode('selection');
               }}
-              className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-lg font-medium transition-colors"
+              className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -450,13 +470,21 @@ function shuffle(arr) {
 }
 
 /* ---- Componente Carta ---- */
-function Card({ role, playerName, playerRole, playerRealName }) {
+function Card({ index, role, playerName, playerRole, playerRealName, onFlip }) {
   const [flipped, setFlipped] = useState(false);
+
+  const handleClick = () => {
+    const newFlipped = !flipped;
+    setFlipped(newFlipped);
+    if (newFlipped && onFlip) {
+      onFlip(index);
+    }
+  };
 
   return (
     <div
       className="w-28 h-44 sm:w-32 sm:h-48 perspective cursor-pointer select-none"
-      onClick={() => setFlipped((f) => !f)}
+      onClick={handleClick}
       title="Tocar para dar vuelta"
     >
       <div
