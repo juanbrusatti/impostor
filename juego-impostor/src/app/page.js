@@ -336,23 +336,34 @@ return (
             key={shuffleKey}
           >
             {roles.map((player, i) => {
+              // Calcular la posición original de la carta
               const total = roles.length;
-              const angle = (i / total) * Math.PI * 2;
-              const radius = isShuffling ? 0 : 100; // Radius of the circle
-              const x = Math.cos(angle) * radius;
-              const y = Math.sin(angle) * radius;
-              
+              // Distribuir las cartas en filas y columnas
+              const cardsPerRow = Math.min(total, 6);
+              const row = Math.floor(i / cardsPerRow);
+              const col = i % cardsPerRow;
+              const cardWidth = 128; // px aprox
+              const cardHeight = 176; // px aprox
+              const gap = 24; // px aprox
+              // Posición original
+              const x0 = (col - (cardsPerRow - 1) / 2) * (cardWidth + gap);
+              const y0 = (row - (Math.ceil(total / cardsPerRow) - 1) / 2) * (cardHeight + gap);
+              // Centro de la pantalla
+              const xCenter = 0;
+              const yCenter = 0;
+              // Animación: si está mezclando, ir al centro; si no, posición original
+              const transform = isShuffling
+                ? `translate(${xCenter - x0}px, ${yCenter - y0}px) scale(1.1)`
+                : `translate(0px, 0px) scale(1)`;
               return (
                 <div 
                   key={i}
-                  className={`transition-all duration-500 ${isShuffling ? 'opacity-100' : 'opacity-100'}`}
+                  className={`transition-all duration-500`}
                   style={{
-                    transform: isShuffling 
-                      ? 'translate(0, 0) scale(1.2)' 
-                      : 'translate(0, 0) scale(1)',
+                    transform,
                     zIndex: isShuffling ? 10 : 1,
                     position: 'relative',
-                    transition: 'all 0.5s ease-in-out'
+                    transition: 'all 0.5s cubic-bezier(0.77,0,0.175,1)'
                   }}
                 >
                   <Card 
