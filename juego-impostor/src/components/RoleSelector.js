@@ -32,7 +32,6 @@ export const RoleSelector = ({
   const handleNameChange = (index, value) => {
     const newNames = [...localPlayerNames];
     newNames[index] = value;
-    console.log('Name changed at index', index, 'to:', value);
     setLocalPlayerNames(newNames);
     onPlayerNamesChange(newNames);
   };
@@ -49,27 +48,34 @@ export const RoleSelector = ({
     }
   };
 
-  const renderNameInputs = () => (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold text-center mb-4">Ingresa los nombres de los jugadores</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Array.from({ length: innocentCount + impostorCount }).map((_, index) => (
-          <div key={index} className="space-y-1">
-            <label className="text-sm text-gray-300">
-              Jugador {index + 1} 👤
-            </label>
-            <input
-              type="text"
-              value={localPlayerNames[index] || ''}
-              onChange={(e) => handleNameChange(index, e.target.value)}
-              className="w-full p-3 rounded-lg bg-[#111528] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#4cafef] transition-colors"
-              placeholder={`Jugador ${index + 1}`}
-            />
-          </div>
-        ))}
+  const renderNameInputs = () => {
+    // Initialize with default names if not set
+    const names = localPlayerNames.length === innocentCount + impostorCount 
+      ? localPlayerNames 
+      : Array(innocentCount + impostorCount).fill('');
+      
+    return (
+      <div className="space-y-6">
+        <h3 className="text-xl font-semibold text-center mb-4">Ingresa los nombres de los jugadores</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Array.from({ length: innocentCount + impostorCount }).map((_, index) => (
+            <div key={index} className="space-y-1">
+              <label className="text-sm text-gray-300">
+                Jugador {index + 1} 👤
+              </label>
+              <input
+                type="text"
+                value=""
+                onChange={(e) => handleNameChange(index, e.target.value)}
+                className="w-full p-3 rounded-lg bg-[#111528] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#4cafef] transition-colors"
+                placeholder={`Jugador ${index + 1}`}
+              />
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderRoleSelector = () => (
     <div className="space-y-8">
@@ -126,9 +132,29 @@ export const RoleSelector = ({
       <h2 className="text-2xl font-bold text-center mb-8">Configura los roles</h2>
       
       <div className="space-y-6 bg-[#2a2a3c] p-8 rounded-lg shadow-lg">
-        {showNameInputs ? renderNameInputs() : (
+        {showNameInputs ? (
+          <div className="space-y-6">
+            {renderNameInputs()}
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={handleContinueClick}
+                className="w-full max-w-xs py-3 bg-[#4cafef] hover:bg-[#3196e8] text-white font-semibold rounded-lg transition-colors"
+              >
+                Continuar al juego
+              </button>
+            </div>
+          </div>
+        ) : (
           <div className="space-y-8">
             {renderRoleSelector()}
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={handleContinueClick}
+                className="w-full max-w-xs py-3 bg-[#4cafef] hover:bg-[#3196e8] text-white font-semibold rounded-lg transition-colors"
+              >
+                Ingresar nombres 👤
+              </button>
+            </div>
           </div>
         )}
       </div>
