@@ -62,29 +62,51 @@ export default function FullScreenWrapper({ children }) {
       });
     }
 
-    const handleUserInteraction = () => {
-      handleFullscreen();
-      // For iOS, we need to scroll to top to hide the address bar
-      if (isIOS()) {
-        window.scrollTo(0, 1);
+    let touchStartY = 0;
+    let lastTap = 0;
+    const TAP_DELAY = 300; // ms
+
+    const handleTouchStart = (e) => {
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchDiff = Math.abs(touchEndY - touchStartY);
+      const currentTime = new Date().getTime();
+      
+      // Only trigger fullscreen on small taps, not scrolls
+      if (touchDiff < 10) {
+        handleFullscreen();
       }
+      
+      // Handle double tap for iOS to show/hide UI
+      if (touchDiff < 10 && currentTime - lastTap < TAP_DELAY) {
+        e.preventDefault();
+        if (isIOS() && window.scrollY === 0) {
+          window.scrollTo(0, 1);
+        }
+      }
+      lastTap = currentTime;
     };
 
     // Add event listeners
-    window.addEventListener('load', handleUserInteraction);
-    window.addEventListener('click', handleUserInteraction);
-    window.addEventListener('touchstart', handleUserInteraction);
-    window.addEventListener('orientationchange', handleUserInteraction);
+    window.addEventListener('load', handleFullscreen);
+    window.addEventListener('click', handleFullscreen);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('orientationchange', handleFullscreen);
 
     // Initial call
-    handleUserInteraction();
+    handleFullscreen();
 
     // Cleanup
     return () => {
-      window.removeEventListener('load', handleUserInteraction);
-      window.removeEventListener('click', handleUserInteraction);
-      window.removeEventListener('touchstart', handleUserInteraction);
-      window.removeEventListener('orientationchange', handleUserInteraction);
+      window.removeEventListener('load', handleFullscreen);
+      window.removeEventListener('click', handleFullscreen);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('orientationchange', handleFullscreen);
       
       if (isIOS()) {
         document.body.style.overflow = '';
