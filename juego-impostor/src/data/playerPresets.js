@@ -171,8 +171,6 @@ Geneals: {
       'Franco Mastantuono',
       'Éder Militão',
       'Ansu Fati'
-
-
     ]},
 
 
@@ -214,7 +212,6 @@ Geneals: {
       'N\'Golo Kanté',
       'Antonio Rüdiger',
       'Édouard Mendy'
-
     ]
   },
   argentinian: {

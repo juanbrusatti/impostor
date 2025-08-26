@@ -315,7 +315,7 @@ return (
         <div className="mt-4 text-center">
           <button
             onClick={() => setView('game-selection')}
-            className="text-sm text-gray-400 hover:text-white transition-colors"
+            className="text-sm text-gray-400 hover:#C0C0C0 transition-colors"
           >
             ← Volver a la selección
           </button>
