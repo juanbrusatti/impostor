@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import CardFullScreen from "@/components/CardFullScreen";
 import { PresetSelector } from "@/components/PresetSelector";
 import { GameModeSelector } from "@/components/GameModeSelector";
 import { RoleSelector } from "@/components/RoleSelector";
@@ -14,7 +15,9 @@ export default function Home() {
   const [roles, setRoles] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState("");
   const [innocentCount, setInnocentCount] = useState(4);
-  const [flippedCards, setFlippedCards] = useState([]);
+  // Estado para navegación de cartas en modo pantalla completa
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [revealedCards, setRevealedCards] = useState([]);
   const [isShuffling, setIsShuffling] = useState(false);
   const [shuffleKey, setShuffleKey] = useState(0);
   const [impostorCount, setImpostorCount] = useState(1);
@@ -82,9 +85,9 @@ export default function Home() {
     }, 0);
   };
 
-  const handleCardFlip = (index) => {
-    setFlippedCards(prev => {
-      // If this card hasn't been flipped before, add it to the flipped cards
+  // Cuando se revela una carta (swipe)
+  const handleCardReveal = (index) => {
+    setRevealedCards((prev) => {
       if (!prev.includes(index)) {
         return [...prev, index];
       }
@@ -92,9 +95,23 @@ export default function Home() {
     });
   };
 
+  // Navegar a la siguiente carta
+  const handleNextCard = () => {
+    if (currentCardIndex + 1 < roles.length) {
+      setCurrentCardIndex(currentCardIndex + 1);
+    } else {
+      // Fin del juego, volver a selección o mostrar resultado
+      setView('game-selection');
+      setGameMode('selection');
+      setCurrentCardIndex(0);
+      setRevealedCards([]);
+    }
+  };
+
   const startGameWithPlayer = (player, names = []) => {
     setCurrentPlayer(player);
-    setFlippedCards([]); // Reset flipped cards when starting a new game
+  setCurrentCardIndex(0);
+  setRevealedCards([]); // Reset revealed cards when starting a new game
     
     // Use the provided names or fall back to state/localStorage
     let currentPlayerNames = names.length > 0 ? [...names] : [...playerNames];
@@ -178,7 +195,8 @@ export default function Home() {
     setPlayersInput("");
     setRoles([]);
     setCurrentPlayer("");
-    setFlippedCards([]);
+  setCurrentCardIndex(0);
+  setRevealedCards([]);
   };
 
   const handleSelectGameMode = (mode) => {
@@ -340,120 +358,17 @@ return (
       </div>
     )}
 
-    {gameMode === 'playing' && (
-      <div className="fixed inset-0 bg-[#1e1e2f] flex flex-col items-center justify-center p-4 z-50">
-        <div className="w-full max-w-6xl mx-auto">
-          <h2 className="text-2xl font-bold mb-8 text-center">¡A Jugar!</h2>
-          {/* Contenedor con scroll si hay más de 8 cartas */}
-          <div 
-            className={`relative flex flex-wrap justify-center gap-4 md:gap-6 px-4 max-w-6xl mx-auto transition-all duration-300 ${roles.length > 8 ? 'overflow-y-auto' : ''}`}
-            style={roles.length > 8 ? { maxHeight: '60vh' } : {}}
-            key={shuffleKey}
-          >
-            {roles.map((player, i) => {
-              // Calcular la posición original de la carta
-              const total = roles.length;
-              // Distribuir las cartas en filas y columnas
-              const cardsPerRow = Math.min(total, 6);
-              const row = Math.floor(i / cardsPerRow);
-              const col = i % cardsPerRow;
-              const cardWidth = 128; // px aprox
-              const cardHeight = 176; // px aprox
-              const gap = 24; // px aprox
-              // Posición original
-              const x0 = (col - (cardsPerRow - 1) / 2) * (cardWidth + gap);
-              const y0 = (row - (Math.ceil(total / cardsPerRow) - 1) / 2) * (cardHeight + gap);
-              // Centro de la pantalla
-              const xCenter = 0;
-              const yCenter = 0;
-              // Animación: si está mezclando, ir al centro; si no, posición original
-              const transform = isShuffling
-                ? `translate(${xCenter - x0}px, ${yCenter - y0}px) scale(1.1)`
-                : `translate(0px, 0px) scale(1)`;
-              return (
-                <Card
-                  key={`${i}-${shuffleKey}`}
-                  index={i}
-                  role={player.role}
-                  playerName={player.name}
-                  playerRole={player.playerRole}
-                  playerRealName={player.realName}
-                  onFlip={handleCardFlip}
-                />
-              );
-            })}
-          </div>
-          
-          {/* Voting button - Only show when all cards have been flipped at least once */}
-          {flippedCards.length === roles.length && roles.length > 0 && (
-            <div className="flex justify-center mt-4 sm:mt-6 px-4">
-              <button 
-                className="w-full max-w-xs px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg transform transition-all hover:scale-105 text-base sm:text-lg"
-                onClick={() => console.log('Voting started!')}
-              >
-                Votar
-              </button>
-            </div>
-          )}
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 justify-center mt-6 sm:mt-8 px-2">
-            <button
-              onClick={async () => {
-                // Start the shuffle animation
-                setIsShuffling(true);
-                
-                // Wait for cards to gather in the center
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Change the key to force re-render of cards with new positions
-                setShuffleKey(prev => prev + 1);
-                
-                // Wait a bit before starting the shuffle
-                await new Promise(resolve => setTimeout(resolve, 300));
-                
-                // Perform the actual shuffle logic
-                if (selectedPreset?.players?.length > 0) {
-                  const randomPlayer = selectedPreset.players[
-                    Math.floor(Math.random() * selectedPreset.players.length)
-                  ];
-                  startGameWithPlayer(randomPlayer);
-                } else if (playersInput) {
-                  const players = playersInput
-                    .split('\n')
-                    .map(s => s.trim())
-                    .filter(Boolean);
-                  if (players.length > 0) {
-                    const newPlayer = players[Math.floor(Math.random() * players.length)];
-                    startGameWithPlayer(newPlayer);
-                  }
-                }
-                
-                // Wait for cards to return to their positions
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Reset shuffle state after animation completes
-                setIsShuffling(false);
-              }}
-              className={`bg-[#4cafef] hover:bg-[#3196e8] px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base ${isShuffling ? 'animate-pulse' : ''}`}
-              disabled={isShuffling}
-            >
-              Mezclar de nuevo
-            </button>
-            <button
-              onClick={() => {
-                setView('game-selection');
-                setGameMode('selection');
-              }}
-              className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Volver
-            </button>
-          </div>
-        </div>
-      </div>
+    {gameMode === 'playing' && roles.length > 0 && (
+      <CardFullScreen
+        key={currentCardIndex}
+        index={currentCardIndex}
+        total={roles.length}
+        role={roles[currentCardIndex].role}
+        playerName={roles[currentCardIndex].name}
+        playerRealName={roles[currentCardIndex].realName}
+        onReveal={handleCardReveal}
+        onNext={handleNextCard}
+      />
     )}
   </main>
   );
