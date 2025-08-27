@@ -129,7 +129,7 @@ const handleWheel = (e) => {
         )}
         {/* Contenido de la carta */}
         <div
-          className={`w-full max-w-sm mx-auto rounded-2xl shadow-2xl bg-white/10 p-8 flex flex-col items-center justify-center transition-all duration-500 ${
+          className={`w-full max-w-sm mx-auto rounded-2xl shadow-2xl bg-white/10 p-12 flex flex-col items-center justify-center transition-all duration-500 ${
             revealed ? "scale-105" : "scale-100"
           }`}
           style={!revealed && dragY > 0 ? {
@@ -138,12 +138,12 @@ const handleWheel = (e) => {
           } : undefined}
         >
           {!revealed ? (
-            <div className="flex flex-col items-center justify-center h-64">
+            <div className="flex flex-col items-center justify-center h-80">
               <span className="text-3xl font-bold mb-2">{playerRealName || `Jugador ${index + 1}`}</span>
               <span className="text-lg text-white/70">Desliza para ver tu rol</span>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-64">
+            <div className="flex flex-col items-center justify-center h-80">
               <span className="text-xl text-gray-300 mb-2">{playerRealName || "Jugador"}</span>
               <div className="w-full h-px bg-white/20 my-2"></div>
               {role === "IMPOSTOR" ? (
