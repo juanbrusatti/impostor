@@ -20,6 +20,7 @@ export default function CardFullScreen({
   onNext,
   index,
   total,
+  onRestart,
 }) {
   const [revealed, setRevealed] = useState(false);
   const [dragY, setDragY] = useState(0); // Para feedback visual
@@ -142,16 +143,30 @@ export default function CardFullScreen({
       </div>
       {/* Navegación */}
       {revealed && (
-        <div className="w-full flex justify-center mt-8">
+        <div className="w-full flex flex-col items-center mt-8">
+          {index + 1 < total ? (
             <button
-                className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-12"
-                onClick={onNext}
-         >
-            {index + 1 < total ? "Siguiente carta" : "Terminar"}
+              className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-4"
+              onClick={onNext}
+            >
+              Siguiente carta
             </button>
-
-
-
+          ) : (
+            <>
+              <button
+                className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-4"
+                onClick={onRestart}
+              >
+                Volver a jugar
+              </button>
+              <button
+                className="bg-gray-500 hover:bg-gray-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-12"
+                onClick={onNext}
+              >
+                Terminar
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -188,16 +188,64 @@ export default function Home() {
     setGameMode('playing');
   };
 
-  const resetGame = () => {
-    setView('mode-selection');
-    setGameMode('selection');
-    setSelectedPreset(null);
-    setPlayersInput("");
-    setRoles([]);
-    setCurrentPlayer("");
-  setCurrentCardIndex(0);
-  setRevealedCards([]);
-  };
+  // Reinicia el juego con nuevos roles y jugador aleatorio, sin volver atrás
+  const restartGame = () => {
+    // Recalcular roles y jugador aleatorio
+    const rolesArray = [
+      ...Array(innocentCount).fill("INOCENTE"),
+      ...Array(impostorCount).fill("IMPOSTOR")
+    ];
+    const shuffledRoles = shuffle(rolesArray);
+    let availablePlayers = [];
+    if (selectedPreset?.players?.length > 0) {
+      availablePlayers = [...selectedPreset.players];
+    } else if (playersInput) {
+      availablePlayers = playersInput
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    if (availablePlayers.length === 0) {
+      availablePlayers = [
+        'Messi', 'Cristiano Ronaldo', 'Neymar', 'Mbappé', 'Lewandowski',
+        'Benzema', 'Salah', 'Haaland', 'De Bruyne', 'Modrić'
+      ];
+    }
+    const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+    let currentPlayerNames = playerNames;
+    if (typeof window !== 'undefined') {
+      const savedNames = localStorage.getItem('playerNames');
+      if (savedNames) {
+        currentPlayerNames = JSON.parse(savedNames);
+      }
+    }
+    if (!currentPlayerNames || currentPlayerNames.length === 0) {
+      currentPlayerNames = Array(innocentCount + impostorCount).fill('').map((_, i) => `Jugador ${i + 1}`);
+    }
+    const playersWithRoles = shuffledRoles.map((role, index) => {
+      if (role === 'IMPOSTOR') {
+        return {
+          role,
+          name: 'IMPOSTOR',
+          playerRole: 'IMPOSTOR',
+          isImpostor: true,
+          realName: currentPlayerNames[index] || `Jugador ${index + 1}`
+        };
+      }
+      return {
+        role,
+        name: randomPlayer,
+        playerRole: 'INOCENTE',
+        isImpostor: false,
+        realName: currentPlayerNames[index] || `Jugador ${index + 1}`
+      };
+    });
+    setRoles(playersWithRoles);
+    setCurrentCardIndex(0);
+    setRevealedCards([]);
+    // Mantener la vista en playing
+    setGameMode('playing');
+  }
 
   const handleSelectGameMode = (mode) => {
     if (mode === 'local') {
@@ -368,6 +416,7 @@ return (
         playerRealName={roles[currentCardIndex].realName}
         onReveal={handleCardReveal}
         onNext={handleNextCard}
+        onRestart={restartGame}
       />
     )}
   </main>
