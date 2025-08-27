@@ -54,10 +54,13 @@ export default function CardFullScreen({
   };
 
   // --- Mouse events (PC) ---
+  // Click derecho (button === 2)
   const handleMouseDown = (e) => {
-    dragging.current = true;
-    dragStartY.current = e.clientY;
-    setDragY(0);
+    if (e.button === 2) { // click derecho
+      dragging.current = true;
+      dragStartY.current = e.clientY;
+      setDragY(0);
+    }
   };
   const handleMouseMove = (e) => {
     if (dragging.current) {
@@ -65,7 +68,7 @@ export default function CardFullScreen({
       setDragY(Math.max(0, deltaY));
     }
   };
-  const handleMouseUp = () => {
+  const handleMouseUp = (e) => {
     if (dragging.current) {
       const threshold = window.innerHeight * 0.33;
       if (dragY > threshold && !revealed) {
@@ -76,6 +79,21 @@ export default function CardFullScreen({
       dragging.current = false;
     }
   };
+  // Scroll con rueda del mouse hacia abajo
+const handleWheel = (e) => {
+  if (!revealed && e.deltaY > 0) { // solo hacia abajo
+    setDragY((prev) => {
+      const newDragY = prev + e.deltaY; // ya es positivo
+      if (newDragY > window.innerHeight * 0.33) {
+        setRevealed(true);
+        if (onReveal) onReveal(index);
+        return 0;
+      }
+      return newDragY;
+    });
+  }
+};
+
 
   // Para evitar scroll de fondo en mobile
   React.useEffect(() => {
@@ -90,14 +108,16 @@ export default function CardFullScreen({
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-[#1e1e2f] to-[#4cafef] text-white"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseMove={dragging.current ? handleMouseMove : undefined}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      style={{ touchAction: 'none', userSelect: 'none' }}
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+  onMouseDown={handleMouseDown}
+  onMouseMove={dragging.current ? handleMouseMove : undefined}
+  onMouseUp={handleMouseUp}
+  onMouseLeave={handleMouseUp}
+  onWheel={handleWheel}
+  onContextMenu={(e) => e.preventDefault()} // evitar menú contextual
+  style={{ touchAction: 'none', userSelect: 'none' }}
     >
       <div className="flex-1 flex flex-col items-center justify-center w-full">
         {/* Indicador swipe */}
