@@ -421,7 +421,10 @@ return (
             playerRealName={roles[currentCardIndex].realName}
             onReveal={handleCardReveal}
             onNext={handleNextCard}
-            onRestart={restartGame}
+            onRestart={() => {
+              restartGame();
+              setShowVoting(false);
+            }}
             showVoteButton={revealedCards.length === roles.length}
             onVote={() => setShowVoting(true)}
           />
@@ -433,8 +436,15 @@ return (
               <VotingScreen
                 players={roles.map(r => r.realName)}
                 impostorName={impostorName}
-                onFinish={() => setShowVoting(false)}
-                onRestart={restartGame}
+                onFinish={() => {
+                  setShowVoting(false);
+                  setView('game-selection');
+                  setGameMode('selection');
+                }}
+                onRestart={() => {
+                  restartGame();
+                  setShowVoting(false);
+                }}
               />
             );
           })()
