@@ -46,7 +46,10 @@ export default function CardFullScreen({
       const threshold = window.innerHeight * 0.33;
       if (dragY > threshold && !revealed) {
         setRevealed(true);
-        if (onReveal) onReveal(index);
+        // Solo llamar onReveal si revealed era false justo antes
+        if (onReveal) {
+          setTimeout(() => onReveal(index), 0);
+        }
       }
       setDragY(0);
       dragging.current = false;
@@ -73,7 +76,9 @@ export default function CardFullScreen({
       const threshold = window.innerHeight * 0.33;
       if (dragY > threshold && !revealed) {
         setRevealed(true);
-        if (onReveal) onReveal(index);
+        if (onReveal) {
+          setTimeout(() => onReveal(index), 0);
+        }
       }
       setDragY(0);
       dragging.current = false;
@@ -84,9 +89,11 @@ const handleWheel = (e) => {
   if (!revealed && e.deltaY > 0) { // solo hacia abajo
     setDragY((prev) => {
       const newDragY = prev + e.deltaY; // ya es positivo
-      if (newDragY > window.innerHeight * 0.33) {
+      if (newDragY > window.innerHeight * 0.33 && !revealed) {
         setRevealed(true);
-        if (onReveal) onReveal(index);
+        if (onReveal) {
+          setTimeout(() => onReveal(index), 0);
+        }
         return 0;
       }
       return newDragY;
