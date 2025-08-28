@@ -22,6 +22,7 @@ export default function CardFullScreen({
   total,
   onRestart,
   showVoteButton,
+  onVote,
 }) {
   const [revealed, setRevealed] = useState(false);
   const [dragY, setDragY] = useState(0); // Para feedback visual
@@ -185,7 +186,7 @@ const handleWheel = (e) => {
         {showVoteButton && (
           <button
             className="bg-red-500 hover:bg-yellow-600 w-70 max-w-xs py-2 rounded-lg font-bold text-base shadow-lg transition-all mb-3"
-            onClick={() => alert('Votación iniciada (lógica pendiente)')}
+            onClick={onVote}
           >
             Votar
           </button>

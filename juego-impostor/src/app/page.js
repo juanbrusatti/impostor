@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import CardFullScreen from "@/components/CardFullScreen";
+import VotingScreen from "@/components/VotingScreen";
 import { PresetSelector } from "@/components/PresetSelector";
 import { GameModeSelector } from "@/components/GameModeSelector";
 import { RoleSelector } from "@/components/RoleSelector";
 import { getPresetById } from "@/data/playerPresets";
 
 export default function Home() {
+  const [showVoting, setShowVoting] = useState(false);
+  // Determinar el nombre del impostor (después de inicializar roles)
   const [view, setView] = useState("mode-selection"); // 'mode-selection' | 'role-selection' | 'game-selection' | 'custom' | 'playing'
   const [gameMode, setGameMode] = useState("selection"); // 'selection' | 'custom' | 'playing'
   const [selectedPreset, setSelectedPreset] = useState(null);
@@ -407,18 +410,36 @@ return (
     )}
 
     {gameMode === 'playing' && roles.length > 0 && (
-      <CardFullScreen
-        key={currentCardIndex}
-        index={currentCardIndex}
-        total={roles.length}
-        role={roles[currentCardIndex].role}
-        playerName={roles[currentCardIndex].name}
-        playerRealName={roles[currentCardIndex].realName}
-        onReveal={handleCardReveal}
-        onNext={handleNextCard}
-        onRestart={restartGame}
-        showVoteButton={revealedCards.length === roles.length}
-      />
+      <>
+        {!showVoting ? (
+          <CardFullScreen
+            key={currentCardIndex}
+            index={currentCardIndex}
+            total={roles.length}
+            role={roles[currentCardIndex].role}
+            playerName={roles[currentCardIndex].name}
+            playerRealName={roles[currentCardIndex].realName}
+            onReveal={handleCardReveal}
+            onNext={handleNextCard}
+            onRestart={restartGame}
+            showVoteButton={revealedCards.length === roles.length}
+            onVote={() => setShowVoting(true)}
+          />
+        ) : (
+          (() => {
+            const impostorRole = roles.find(r => r.role === "IMPOSTOR");
+            const impostorName = impostorRole ? impostorRole.realName : "";
+            return (
+              <VotingScreen
+                players={roles.map(r => r.realName)}
+                impostorName={impostorName}
+                onFinish={() => setShowVoting(false)}
+                onRestart={restartGame}
+              />
+            );
+          })()
+        )}
+      </>
     )}
   </main>
   );
