@@ -417,6 +417,7 @@ return (
         onReveal={handleCardReveal}
         onNext={handleNextCard}
         onRestart={restartGame}
+        showVoteButton={revealedCards.length === roles.length}
       />
     )}
   </main>
