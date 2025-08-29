@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import VoteCountAnimation from "./VoteCountAnimation";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function VotingScreen({ players, impostorName, onFinish, onRestart }) {
   const [currentPlayers, setCurrentPlayers] = useState(players);
   const [currentTurn, setCurrentTurn] = useState(0);
   const [votes, setVotes] = useState([]);
   const [showResult, setShowResult] = useState(false);
+  const [showVoteAnimation, setShowVoteAnimation] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
   const [winner, setWinner] = useState(null); // 'inocentes' | 'impostor'
   const [eliminated, setEliminated] = useState([]); // nombres eliminados
@@ -36,7 +39,7 @@ export default function VotingScreen({ players, impostorName, onFinish, onRestar
     if (currentTurn + 1 < currentPlayers.length) {
       setCurrentTurn(currentTurn + 1);
     } else {
-      setShowResult(true);
+      setShowVoteAnimation(true);
     }
   };
 
@@ -53,52 +56,52 @@ export default function VotingScreen({ players, impostorName, onFinish, onRestar
       setEliminated(newEliminated);
       // Si quedan 3 jugadores, permitir una última ronda de votación
       if (currentPlayers.length - 1 === 2) {
-        // Última ronda: si votan a un inocente, gana el impostor; si votan al impostor, ganan los inocentes
         const nextPlayers = currentPlayers.filter(name => name !== mostVotedName);
-        // Si el impostor fue eliminado, termina el juego (ya cubierto arriba)
-        // Si quedan solo inocentes, gana el impostor
         if (mostVotedName !== impostorName) {
-          // Si después de eliminar hay solo inocentes, termina
           if (!nextPlayers.includes(impostorName)) {
             setTimeout(() => {
               setGameEnded(true);
               setWinner('impostor');
-            }, 2200);
+            }, 2500);
             return;
           }
         }
-        // Si quedan dos jugadores, termina el juego y gana el impostor
         if (nextPlayers.length === 2) {
           setTimeout(() => {
             setGameEnded(true);
             setWinner('impostor');
-          }, 2000);
+          }, 2500);
           return;
         }
-        // Si quedan más de dos, preparar nueva ronda
         setTimeout(() => {
           setCurrentPlayers(nextPlayers);
           setVotes([]);
           setCurrentTurn(0);
           setShowResult(false);
-        }, 2000);
+        }, 2500);
       } else if (currentPlayers.length - 1 < 2) {
-        // Si quedan menos de 2, termina el juego
         setGameEnded(true);
         setWinner('impostor');
         return;
       } else {
-        // Preparar nueva ronda sin el eliminado
         const nextPlayers = currentPlayers.filter(name => name !== mostVotedName);
         setTimeout(() => {
           setCurrentPlayers(nextPlayers);
           setVotes([]);
           setCurrentTurn(0);
           setShowResult(false);
-        }, 2000);
+        }, 2500);
       }
     }
   }, [showResult]);
+
+  // Cuando termina la votación, mostrar animación antes del resultado
+  React.useEffect(() => {
+    if (showVoteAnimation) {
+      // Esperar a que la animación termine antes de mostrar el resultado
+      // El resultado se mostrará cuando VoteCountAnimation llame a onComplete
+    }
+  }, [showVoteAnimation]);
 
   if (gameEnded) {
     return (
@@ -134,7 +137,7 @@ export default function VotingScreen({ players, impostorName, onFinish, onRestar
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-[#1e1e2f] to-[#4cafef] text-white p-6">
-      {!showResult ? (
+      {!showVoteAnimation && !showResult ? (
         <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-8">
           <h2 className="text-2xl font-bold mb-2 text-center">Votación</h2>
           <p className="text-lg text-white/80 mb-4 text-center">
@@ -154,33 +157,57 @@ export default function VotingScreen({ players, impostorName, onFinish, onRestar
           </div>
           <p className="text-sm text-gray-400 mt-6 text-center">Tu voto es secreto</p>
         </div>
-      ) : (
-        <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-8 relative">
-          {/* Animación confetis o dedos */}
-          {impostorDiscovered && (
-            <div className="absolute inset-0 pointer-events-none z-10 flex">
-              <div className="w-1/2 flex justify-start items-start">
-                <span className="animate-confetti text-6xl">🎉</span>
-              </div>
-              <div className="w-1/2 flex justify-end items-start">
-                <span className="animate-confetti text-6xl">🎉</span>
-              </div>
-            </div>
-          )}
-          {!impostorDiscovered && maxVotes > 0 && (
-            <div className="absolute inset-0 pointer-events-none z-10 flex flex-col items-center justify-center">
-              <span className="animate-fingers text-6xl mb-2">👎👎👎</span>
-            </div>
-          )}
-          <h2 className="text-2xl font-bold mb-2 text-center">Resultado de la ronda</h2>
-          <div className="bg-white/10 rounded-xl p-6 shadow-lg flex flex-col items-center">
-            <span className="text-lg text-white/80 mb-2">El jugador más votado fue:</span>
-            <span className="text-2xl font-bold text-[#4cafef] mb-2">{mostVotedName || "Nadie"}</span>
-            <span className="text-lg text-white/80 mt-2">Jugadores eliminados:</span>
-            <span className="text-xl font-bold text-[#4cafef] mb-2">{eliminated.join(', ') || 'Ninguno'}</span>
-          </div>
+      ) : null}
+
+      {showVoteAnimation && !showResult && (
+        <div className="w-full max-w-lg mx-auto flex flex-col items-center gap-8">
+          <h2 className="text-2xl font-bold mb-2 text-center">Recuento de votos</h2>
+          <VoteCountAnimation
+            votes={currentPlayers.map((name, idx) => ({ name, count: votes.filter(v => v === idx).length }))}
+            onComplete={() => {
+              setTimeout(() => {
+                setShowVoteAnimation(false);
+                setShowResult(true);
+              }, 1000); // 1 segundo de transición suave
+            }}
+          />
         </div>
       )}
+
+      <AnimatePresence>
+        {showResult && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className="w-full max-w-lg mx-auto flex flex-col items-center gap-8 relative"
+          >
+            {/* Animación confetis o dedos */}
+            {impostorDiscovered && (
+              <div className="absolute inset-0 pointer-events-none z-10 flex">
+                <div className="w-1/2 flex justify-start items-start">
+                  <span className="animate-confetti text-6xl">🎉</span>
+                </div>
+                <div className="w-1/2 flex justify-end items-start">
+                  <span className="animate-confetti text-6xl">🎉</span>
+                </div>
+              </div>
+            )}
+            {!impostorDiscovered && maxVotes > 0 && (
+              <div className="absolute inset-0 pointer-events-none z-10 flex flex-col items-center justify-center">
+              </div>
+            )}
+            <h2 className="text-2xl font-bold mb-2 text-center">Resultado de la ronda</h2>
+            <div className="bg-white/10 rounded-xl p-6 shadow-lg flex flex-col items-center">
+              <span className="text-lg text-white/80 mb-2">El jugador más votado fue:</span>
+              <span className="text-2xl font-bold text-[#4cafef] mb-2">{mostVotedName || "Nadie"}</span>
+              <span className="text-lg text-white/80 mt-2">Jugadores eliminados:</span>
+              <span className="text-xl font-bold text-[#4cafef] mb-2">{eliminated.join(', ') || 'Ninguno'}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Animaciones CSS */}
       <style jsx>{`
         .animate-confetti {
