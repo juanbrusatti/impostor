@@ -185,7 +185,7 @@ const handleWheel = (e) => {
         {/* Botón de votar, solo visible si showVoteButton es true */}
         {showVoteButton && (
           <button
-            className="bg-red-500 hover:bg-yellow-600 w-70 max-w-xs py-2 rounded-lg font-bold text-base shadow-lg transition-all mb-3"
+            className="bg-red-600 hover:bg-red-700 w-70 max-w-xs py-2 rounded-lg font-bold text-base shadow-lg transition-all mb-3"
             onClick={onVote}
           >
             Votar

@@ -11,7 +11,7 @@ import { getPresetById } from "@/data/playerPresets";
 export default function Home() {
   const [showVoting, setShowVoting] = useState(false);
   // Determinar el nombre del impostor (después de inicializar roles)
-  const [view, setView] = useState("mode-selection"); // 'mode-selection' | 'role-selection' | 'game-selection' | 'custom' | 'playing'
+  const [view, setView] = useState("mode-selection"); // 'mode-selection' | 'role-selection' | 'game-selection' | 'custom-list' | 'playing'
   const [gameMode, setGameMode] = useState("selection"); // 'selection' | 'custom' | 'playing'
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [playersInput, setPlayersInput] = useState("");
@@ -34,7 +34,9 @@ export default function Home() {
     setSelectedPreset(preset);
     
     if (preset.id === 'custom') {
-      setGameMode('custom');
+      setView('custom-list'); // Go directly to custom list view
+    } else {
+      setView('game-selection');
     }
   };
 
@@ -348,37 +350,22 @@ return (
       </div>
     )}
 
-    {gameMode === 'custom' && view !== 'mode-selection' && view !== 'game-selection' && (
+    {view === 'custom-list' && (
       <div className="w-full max-w-lg mt-8">
+        <button
+          onClick={() => setView('game-selection')}
+          className="mb-6 flex items-center text-gray-300 hover:text-white transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+          Volver
+        </button>
         <h2 className="text-2xl font-bold mb-6 text-center">Personalizar Lista</h2>
-        <p className="opacity-80 mb-4 text-center">
+        <p className="opacity-80 mb-6 text-center">
           Escribí <b>futbolistas</b> (uno por línea).
+          <br />
         </p>
-        
-        <div className="flex justify-center gap-4 mb-4">
-          <div className="flex flex-col items-center">
-            <label className="text-sm text-gray-300 mb-1">Inocentes</label>
-            <input
-              type="number"
-              min="1"
-              max="10"
-              value={innocentCount}
-              onChange={(e) => setInnocentCount(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
-              className="w-20 p-2 rounded bg-[#111528] border border-white/10 text-center"
-            />
-          </div>
-          <div className="flex flex-col items-center">
-            <label className="text-sm text-gray-300 mb-1">Impostores</label>
-            <input
-              type="number"
-              min="1"
-              max="3"
-              value={impostorCount}
-              onChange={(e) => setImpostorCount(Math.min(3, Math.max(1, parseInt(e.target.value) || 1)))}
-              className="w-20 p-2 rounded bg-[#111528] border border-white/10 text-center"
-            />
-          </div>
-        </div>
         
         <textarea
           className="w-full h-40 p-3 rounded-lg bg-[#111528] text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-[#4cafef]"
