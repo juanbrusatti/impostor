@@ -8,6 +8,37 @@ import { GameModeSelector } from "@/components/GameModeSelector";
 import { RoleSelector } from "@/components/RoleSelector";
 import { getPresetById } from "@/data/playerPresets";
 
+/** 
+ *
+ * - CardFullScreen: Muestra una carta en pantalla completa
+ * - VotingScreen: Muestra una pantalla de votación
+ * - PresetSelector: Muestra un selector de preajustes
+ * - GameModeSelector: Muestra un selector de modo de juego
+ * - RoleSelector: Muestra un selector de roles
+ * - Home: Es el componente principal de la página de inicio
+ * 
+ * Cada uno de estos componentes tiene su propio estado y comportamiento.
+ * 
+ * - showVoting: indica si se muestra el componente de votación (VotingScreen) o no.
+ * - preset: el preset seleccionado por el usuario. Si no se selecciona ninguno, es null.
+ * - numPlayers: el número de jugadores seleccionado por el usuario. Si no se selecciona
+ *   ninguno, es null.
+ * - gameMode: el modo de juego seleccionado por el usuario. Si no se selecciona ninguno,
+ *   es null.
+ * - roles: los roles de los jugadores, junto con su nombre y foto. Si no se han
+ *   seleccionado roles, es un array vacío.
+ * - selectedImpostor: el nombre del jugador impostor seleccionado por el usuario. Si
+ *   no se ha seleccionado ninguno, es null.
+ * - currentPlayer: el nombre del jugador actual que está siendo revelado.
+ * - innocentCount: el número de jugadores inocentes seleccionado por el usuario.
+ * - impostorCount: el número de jugadores impostores seleccionado por el usuario.
+ * - playerNames: los nombres de los jugadores seleccionados por el usuario.
+ * - currentCardIndex: el índice de la carta actual que está siendo revelada.
+ * - revealedCards: un array con los índices de las cartas que ya han sido reveladas.
+ * - isShuffling: un booleano que indica si se está mezclando el orden de las cartas.
+ * - shuffleKey: una clave que se usa para forzar la re-renderización de las cartas.
+ */
+
 export default function Home() {
   const [showVoting, setShowVoting] = useState(false);
   // Determinar el nombre del impostor (después de inicializar roles)

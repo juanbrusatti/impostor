@@ -11,6 +11,9 @@ import React, { useRef, useState } from "react";
  * - onNext: callback para pasar a la siguiente carta
  * - index: índice de la carta
  * - total: total de cartas
+ * - onRestart: callback para reiniciar el juego
+ * - showVoteButton: booleano que indica si se debe mostrar el botón de votar
+ * - onVote: callback para votar
  */
 export default function CardFullScreen({
   role,
