@@ -27,6 +27,7 @@ export default function RootLayout({ children }) {
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7753139751518327"
           crossOrigin="anonymous"
         ></script>
+        <meta name="monetag" content="21bc1f869f6bff29e8d8b7ceb7856a70" />
       </Head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
