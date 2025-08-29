@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CardFullScreen from "@/components/CardFullScreen";
 import VotingScreen from "@/components/VotingScreen";
 import { PresetSelector } from "@/components/PresetSelector";
 import { GameModeSelector } from "@/components/GameModeSelector";
 import { RoleSelector } from "@/components/RoleSelector";
+import { RoomManager } from "@/components/RoomManager";
+import { RoomLobby } from "@/components/RoomLobby";
 import { getPresetById } from "@/data/playerPresets";
+import roomService from "@/utils/roomService";
+import { testServerConnection } from "@/utils/serverTest";
 
 /** 
  *
@@ -42,8 +46,8 @@ import { getPresetById } from "@/data/playerPresets";
 export default function Home() {
   const [showVoting, setShowVoting] = useState(false);
   // Determinar el nombre del impostor (después de inicializar roles)
-  const [view, setView] = useState("mode-selection"); // 'mode-selection' | 'role-selection' | 'game-selection' | 'custom-list' | 'playing'
-  const [gameMode, setGameMode] = useState("selection"); // 'selection' | 'custom' | 'playing'
+  const [view, setView] = useState("mode-selection"); // 'mode-selection' | 'role-selection' | 'game-selection' | 'custom-list' | 'playing' | 'room-manager' | 'room-lobby'
+  const [gameMode, setGameMode] = useState("selection"); // 'selection' | 'custom' | 'playing' | 'online'
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [playersInput, setPlayersInput] = useState("");
   const [roles, setRoles] = useState([]);
@@ -59,6 +63,11 @@ export default function Home() {
   const [playerNames, setPlayerNames] = useState(
     Array(innocentCount + impostorCount).fill('').map((_, i) => `Jugador ${i + 1}`)
   );
+
+  // Estados para el modo online
+  const [currentRoom, setCurrentRoom] = useState(null);
+  const [roomPlayers, setRoomPlayers] = useState([]);
+  const [isHost, setIsHost] = useState(false);
 
   const handleSelectPreset = (presetId) => {
     const preset = getPresetById(presetId);
@@ -286,8 +295,10 @@ export default function Home() {
   const handleSelectGameMode = (mode) => {
     if (mode === 'local') {
       setView('role-selection');
+    } else if (mode === 'online') {
+      setView('room-manager');
+      setGameMode('online');
     }
-    // For 'online', we don't need to do anything as the button is disabled
   };
 
   const handleBackToModeSelection = () => {
@@ -327,6 +338,177 @@ const handlePlayerNamesChange = (names) => {
   setPlayerNames(names);
 };
 
+// Funciones para el modo online
+const handleJoinRoom = async (roomCode, playerName, isCreating) => {
+  try {
+    console.log('Intentando', isCreating ? 'crear' : 'unirse a', 'sala:', roomCode);
+    
+    let room;
+    if (isCreating) {
+      room = await roomService.createRoom(roomCode, playerName);
+      console.log('Sala creada exitosamente:', room);
+    } else {
+      room = await roomService.joinRoom(roomCode, playerName);
+      console.log('Unido a sala exitosamente:', room);
+    }
+
+    setCurrentRoom(room);
+    setRoomPlayers(room.players);
+    setIsHost(roomService.getCurrentPlayer()?.isHost || false);
+    setView('room-lobby');
+
+    // Suscribirse a eventos de la sala
+    roomService.subscribeToRoom(roomCode, handleRoomEvent);
+  } catch (error) {
+    console.error('Error al', isCreating ? 'crear' : 'unirse a', 'sala:', error);
+    alert(`Error: ${error.message}`);
+  }
+};
+
+const handleRoomEvent = (event, data) => {
+  console.log('📡 Evento recibido:', event, data);
+  switch (event) {
+    case 'roomUpdated':
+      console.log('🔄 Actualizando lista de jugadores:', data.players);
+      setRoomPlayers(data.players);
+      break;
+    case 'gameStarted':
+      console.log('🎮 Evento gameStarted recibido');
+      // Asegurar que tenemos los datos más recientes
+      setTimeout(() => {
+        startOnlineGame(data);
+      }, 100);
+      break;
+    default:
+      console.log('❓ Evento desconocido:', event);
+  }
+};
+
+const handleLeaveRoom = () => {
+  if (currentRoom) {
+    roomService.leaveRoom();
+    roomService.unsubscribeFromRoom();
+  }
+  
+  setCurrentRoom(null);
+  setRoomPlayers([]);
+  setIsHost(false);
+  setView('mode-selection');
+  setGameMode('selection');
+};
+
+const handleStartOnlineGame = () => {
+  if (!currentRoom || !isHost) return;
+
+  const gameConfig = {
+    innocentCount,
+    impostorCount,
+    selectedPreset,
+    playersInput
+  };
+
+  roomService.startGame(gameConfig);
+};
+
+const startOnlineGame = (gameData) => {
+  console.log('🎮 Iniciando juego online con datos:', gameData);
+  console.log('👥 Jugadores actuales:', roomPlayers);
+  
+  // Configurar el juego con los datos recibidos
+  setInnocentCount(gameData.innocentCount || 4);
+  setImpostorCount(gameData.impostorCount || 1);
+  setSelectedPreset(gameData.selectedPreset || null);
+  setPlayersInput(gameData.playersInput || '');
+  
+  // Crear las cartas con los roles asignados
+  const currentPlayer = roomService.getCurrentPlayer();
+  console.log('🎯 Jugador actual:', currentPlayer);
+  
+  // Usar los datos del servidor para encontrar el índice del jugador
+  const serverRoom = roomService.getCurrentRoom();
+  const playerIndex = serverRoom?.players?.findIndex(p => p.id === currentPlayer?.id);
+  
+  console.log('🔍 Índice del jugador encontrado:', playerIndex);
+  console.log('📋 Roles disponibles:', gameData.roles);
+  
+  if (playerIndex !== -1 && gameData.roles && gameData.roles[playerIndex]) {
+    const playerRole = gameData.roles[playerIndex];
+    const currentPlayerName = currentPlayer.name;
+    
+    console.log(`👤 Jugador ${currentPlayerName} tiene rol: ${playerRole}`);
+    
+    // Obtener la lista de jugadores disponibles
+    let availablePlayers = [];
+    if (gameData.selectedPreset?.players?.length > 0) {
+      availablePlayers = [...gameData.selectedPreset.players];
+    } else if (gameData.playersInput) {
+      availablePlayers = gameData.playersInput
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    
+    // Si no hay jugadores disponibles, usar lista por defecto
+    if (availablePlayers.length === 0) {
+      availablePlayers = [
+        'Messi', 'Cristiano Ronaldo', 'Neymar', 'Mbappé', 'Lewandowski',
+        'Benzema', 'Salah', 'Haaland', 'De Bruyne', 'Modrić'
+      ];
+    }
+    
+    // Seleccionar un jugador aleatorio para los inocentes
+    const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+    
+    // Crear la carta para este jugador
+    const card = {
+      role: playerRole,
+      name: playerRole === 'IMPOSTOR' ? 'IMPOSTOR' : randomPlayer,
+      playerRole: playerRole,
+      isImpostor: playerRole === 'IMPOSTOR',
+      realName: currentPlayerName
+    };
+    
+    console.log('🃏 Carta creada:', card);
+    
+    setRoles([card]);
+    setCurrentPlayer(card.name);
+    setView('playing');
+    setGameMode('playing');
+  } else {
+    console.error('❌ No se pudo encontrar el índice del jugador');
+    console.error('Datos del servidor:', serverRoom);
+    console.error('Jugador actual:', currentPlayer);
+    console.error('Roles:', gameData.roles);
+    
+    // Fallback: crear una carta por defecto
+    const fallbackCard = {
+      role: 'INOCENTE',
+      name: 'Messi',
+      playerRole: 'INOCENTE',
+      isImpostor: false,
+      realName: currentPlayer?.name || 'Jugador'
+    };
+    
+    console.log('🃏 Usando carta por defecto:', fallbackCard);
+    setRoles([fallbackCard]);
+    setCurrentPlayer(fallbackCard.name);
+    setView('playing');
+    setGameMode('playing');
+  }
+};
+
+  // Limpiar suscripciones cuando el componente se desmonte
+  useEffect(() => {
+    // Probar conexión al servidor
+    testServerConnection();
+    
+    return () => {
+      if (currentRoom) {
+        roomService.unsubscribeFromRoom();
+      }
+    };
+  }, [currentRoom]);
+
 return (
   <main className="min-h-screen bg-[#1e1e2f] text-white flex flex-col items-center p-6">
     {view === 'mode-selection' && (
@@ -336,6 +518,34 @@ return (
           <p className="text-sm sm:text-base text-gray-300">Toca una carta para ver el rol</p>
         </header>
         <GameModeSelector onSelectMode={handleSelectGameMode} />
+      </div>
+    )}
+
+    {view === 'room-manager' && (
+      <div className="min-h-screen bg-[#1e1e2f] text-white p-4 flex flex-col">
+        <header className="mb-4 sm:mb-6 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Sala Online</h1>
+          <p className="text-sm sm:text-base text-gray-300">Crea o únete a una sala</p>
+        </header>
+        <RoomManager 
+          onJoinRoom={handleJoinRoom}
+          onBack={() => {
+            setView('mode-selection');
+            setGameMode('selection');
+          }}
+        />
+      </div>
+    )}
+
+    {view === 'room-lobby' && currentRoom && (
+      <div className="min-h-screen bg-[#1e1e2f] text-white p-4 flex flex-col">
+        <RoomLobby
+          roomCode={currentRoom.code}
+          players={roomPlayers}
+          isHost={isHost}
+          onStartGame={handleStartOnlineGame}
+          onLeaveRoom={handleLeaveRoom}
+        />
       </div>
     )}
 
