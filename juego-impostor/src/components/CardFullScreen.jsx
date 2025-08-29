@@ -21,6 +21,8 @@ export default function CardFullScreen({
   index,
   total,
   onRestart,
+  showVoteButton,
+  onVote,
 }) {
   const [revealed, setRevealed] = useState(false);
   const [dragY, setDragY] = useState(0); // Para feedback visual
@@ -46,7 +48,10 @@ export default function CardFullScreen({
       const threshold = window.innerHeight * 0.33;
       if (dragY > threshold && !revealed) {
         setRevealed(true);
-        if (onReveal) onReveal(index);
+        // Solo llamar onReveal si revealed era false justo antes
+        if (onReveal) {
+          setTimeout(() => onReveal(index), 0);
+        }
       }
       setDragY(0);
       dragging.current = false;
@@ -73,7 +78,9 @@ export default function CardFullScreen({
       const threshold = window.innerHeight * 0.33;
       if (dragY > threshold && !revealed) {
         setRevealed(true);
-        if (onReveal) onReveal(index);
+        if (onReveal) {
+          setTimeout(() => onReveal(index), 0);
+        }
       }
       setDragY(0);
       dragging.current = false;
@@ -84,9 +91,11 @@ const handleWheel = (e) => {
   if (!revealed && e.deltaY > 0) { // solo hacia abajo
     setDragY((prev) => {
       const newDragY = prev + e.deltaY; // ya es positivo
-      if (newDragY > window.innerHeight * 0.33) {
+      if (newDragY > window.innerHeight * 0.33 && !revealed) {
         setRevealed(true);
-        if (onReveal) onReveal(index);
+        if (onReveal) {
+          setTimeout(() => onReveal(index), 0);
+        }
         return 0;
       }
       return newDragY;
@@ -163,32 +172,41 @@ const handleWheel = (e) => {
       </div>
       {/* Navegación */}
       {revealed && (
-        <div className="w-full flex flex-col items-center mt-8">
-          {index + 1 < total ? (
-            <button
-              className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-4"
-              onClick={onNext}
-            >
-              Siguiente carta
-            </button>
-          ) : (
-            <>
-              <button
-                className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-4"
-                onClick={onRestart}
-              >
-                Volver a jugar
-              </button>
-              <button
-                className="bg-gray-500 hover:bg-gray-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-12"
-                onClick={onNext}
-              >
-                Terminar
-              </button>
-            </>
-          )}
-        </div>
-      )}
+  <div className="w-full flex flex-col items-center mt-8">
+    {index + 1 < total ? (
+      <button
+        className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-4"
+        onClick={onNext}
+      >
+        Siguiente carta
+      </button>
+    ) : (
+      <>
+        {/* Botón de votar, solo visible si showVoteButton es true */}
+        {showVoteButton && (
+          <button
+            className="bg-red-500 hover:bg-yellow-600 w-70 max-w-xs py-2 rounded-lg font-bold text-base shadow-lg transition-all mb-3"
+            onClick={onVote}
+          >
+            Votar
+          </button>
+        )}
+          <button
+          className="bg-[#4cafef] hover:bg-[#3196e8] w-60 max-w-xs py-2 rounded-lg font-semibold text-sm shadow-md transition-all mb-3"
+          onClick={onRestart}
+          >
+          Volver a jugar
+          </button>
+          <button
+          className="bg-gray-500 hover:bg-gray-700 w-50 max-w-xs py-2 rounded-md font-normal text-sm shadow transition-all mb-8"
+          onClick={onNext}
+          >
+          Terminar
+         </button>
+      </>
+    )}
+  </div>
+)}
     </div>
   );
-}
+};
