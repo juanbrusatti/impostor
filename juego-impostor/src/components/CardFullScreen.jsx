@@ -14,6 +14,14 @@ import React, { useRef, useState, useEffect } from "react";
  * - onRestart: callback para reiniciar el juego
  * - showVoteButton: booleano que indica si se debe mostrar el botón de votar
  * - onVote: callback para votar
+ * - isRevealed: booleano que indica si el rol está revelado
+ * - isDragging: booleano que indica si se está arrastrando el drawer
+ * - dragStartY: posición inicial del arrastre
+ * - currentDragY: posición actual del arrastre
+ * - hasRevealed: booleano que indica si el rol ha sido revelado
+ * - drawerHeight: altura del drawer
+ * - drawerOpen: booleano que indica si el drawer está abierto
+ * - drawerRef: referencia al drawer
  */
 export default function CardFullScreen({
   role,
@@ -33,6 +41,8 @@ export default function CardFullScreen({
   const [dragStartY, setDragStartY] = useState(0);
   const [currentDragY, setCurrentDragY] = useState(0);
   const [hasRevealed, setHasRevealed] = useState(false);
+  const [hasHiddenAfterReveal, setHasHiddenAfterReveal] = useState(false);
+  const [canOpenDrawer, setCanOpenDrawer] = useState(true);
   
   const drawerRef = useRef(null);
   const containerRef = useRef(null);
@@ -77,6 +87,7 @@ export default function CardFullScreen({
         setDrawerOpen(true);
         if (!hasRevealed) {
           setHasRevealed(true);
+          setCanOpenDrawer(false); // Bloquear futuras aperturas
           if (onReveal) {
             setTimeout(() => onReveal(index), 300);
           }
@@ -85,13 +96,17 @@ export default function CardFullScreen({
         // Cerrar completamente
         setDrawerHeight(DRAWER_MIN_HEIGHT);
         setDrawerOpen(false);
+        // Si ya había revelado y ahora oculta, marcar como ocultado después de revelar
+        if (hasRevealed) {
+          setHasHiddenAfterReveal(true);
+        }
       }
     }
   };
 
   // Mouse events para desktop
   const handleMouseDown = (e) => {
-    if (e.button === 0) { // Click izquierdo
+    if (e.button === 0) { // Click izquierdo - permitir cerrar incluso después de revelar
       setIsDragging(true);
       setDragStartY(e.clientY);
       setCurrentDragY(drawerHeight);
@@ -116,6 +131,7 @@ export default function CardFullScreen({
         setDrawerOpen(true);
         if (!hasRevealed) {
           setHasRevealed(true);
+          setCanOpenDrawer(false); // Bloquear futuras aperturas
           if (onReveal) {
             setTimeout(() => onReveal(index), 300);
           }
@@ -123,6 +139,10 @@ export default function CardFullScreen({
       } else {
         setDrawerHeight(DRAWER_MIN_HEIGHT);
         setDrawerOpen(false);
+        // Si ya había revelado y ahora oculta, marcar como ocultado después de revelar
+        if (hasRevealed) {
+          setHasHiddenAfterReveal(true);
+        }
       }
     }
   };
@@ -133,11 +153,16 @@ export default function CardFullScreen({
       if (drawerOpen) {
         setDrawerHeight(DRAWER_MIN_HEIGHT);
         setDrawerOpen(false);
-      } else {
+        // Si ya había revelado y ahora oculta, marcar como ocultado después de revelar
+        if (hasRevealed) {
+          setHasHiddenAfterReveal(true);
+        }
+      } else if (canOpenDrawer) {
         setDrawerHeight(DRAWER_MAX_HEIGHT);
         setDrawerOpen(true);
         if (!hasRevealed) {
           setHasRevealed(true);
+          setCanOpenDrawer(false); // Bloquear futuras aperturas
           if (onReveal) {
             setTimeout(() => onReveal(index), 300);
           }
@@ -156,15 +181,22 @@ export default function CardFullScreen({
       setDrawerHeight(newHeight);
       
       if (newHeight > REVEAL_THRESHOLD && !drawerOpen) {
-        setDrawerOpen(true);
-        if (!hasRevealed) {
-          setHasRevealed(true);
-          if (onReveal) {
-            setTimeout(() => onReveal(index), 300);
+        if (canOpenDrawer) {
+          setDrawerOpen(true);
+          if (!hasRevealed) {
+            setHasRevealed(true);
+            setCanOpenDrawer(false); // Bloquear futuras aperturas
+            if (onReveal) {
+              setTimeout(() => onReveal(index), 300);
+            }
           }
         }
       } else if (newHeight <= REVEAL_THRESHOLD && drawerOpen) {
         setDrawerOpen(false);
+        // Si ya había revelado y ahora oculta, marcar como ocultado después de revelar
+        if (hasRevealed) {
+          setHasHiddenAfterReveal(true);
+        }
       }
     }
   };
@@ -192,28 +224,73 @@ export default function CardFullScreen({
       onWheel={handleWheel}
       style={{ touchAction: 'none', userSelect: 'none' }}
     >
-      {/* Header con información del jugador */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
-        {/* Indicador de swipe */}
-        {!drawerOpen && (
-          <div className="absolute top-8 left-0 right-0 flex flex-col items-center">
-            <div className="w-12 h-1 rounded-full bg-white/40 mb-2" />
-            <span className="text-base text-white/70 animate-bounce">
-              {isMobile() ? "Desliza hacia arriba para revelar" : "Haz click o usa la rueda del mouse"}
-            </span>
-          </div>
-        )}
+             {/* Header con información del jugador */}
+       <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
+         {/* Indicador de swipe */}
+         {!drawerOpen && canOpenDrawer && (
+           <div className="absolute top-8 left-0 right-0 flex flex-col items-center">
+             <div className="w-12 h-1 rounded-full bg-white/40 mb-2" />
+             <span className="text-base text-white/70 animate-bounce">
+               {isMobile() ? "Desliza hacia arriba para revelar" : "Haz click o usa la rueda del mouse"}
+             </span>
+           </div>
+         )}
 
-        {/* Contenido principal de la carta */}
-        <div className="flex flex-col items-center justify-center text-center">
-          <div className="text-4xl font-bold mb-4">
-            {playerRealName || `Jugador ${index + 1}`}
-          </div>
-          <div className="text-xl text-white/70">
-            {drawerOpen ? "Tu rol está revelado" : "Desliza hacia arriba para ver tu rol"}
-          </div>
-        </div>
-      </div>
+         {/* Contenido principal de la carta */}
+         <div className="flex flex-col items-center justify-center text-center">
+           <div className="text-4xl font-bold mb-4">
+             {playerRealName || `Jugador ${index + 1}`}
+           </div>
+           <div className="text-xl text-white/70">
+             {drawerOpen ? "Tu rol está revelado" : 
+              hasRevealed ? "Rol ya revelado" : "Desliza hacia arriba para ver tu rol"}
+           </div>
+         </div>
+
+         {/* Botones de navegación - SOLO cuando el drawer está cerrado y se ha ocultado después de revelar */}
+         {!drawerOpen && hasHiddenAfterReveal && (
+           <div className="flex flex-col items-center gap-4 mt-8">
+             {index + 1 < total ? (
+               <button
+                 className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
+                 onClick={onNext}
+               >
+                 Siguiente carta
+               </button>
+             ) : (
+               <>
+                 {showVoteButton && (
+                   <button
+                     className="bg-red-600 hover:bg-red-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
+                     onClick={onVote}
+                   >
+                     Votar
+                   </button>
+                 )}
+                 <button
+                   className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
+                   onClick={onRestart}
+                 >
+                   Volver a jugar
+                 </button>
+                 <button
+                   className="bg-gray-500 hover:bg-gray-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
+                   onClick={onNext}
+                 >
+                   Terminar
+                 </button>
+               </>
+             )}
+           </div>
+         )}
+
+         {/* Mensaje cuando está revelado pero no ocultado */}
+         {!drawerOpen && hasRevealed && !hasHiddenAfterReveal && (
+           <div className="text-sm text-white/60 text-center mt-8">
+             Oculta tu rol para continuar
+           </div>
+         )}
+       </div>
 
       {/* Drawer que se abre desde abajo */}
       <div
@@ -253,41 +330,6 @@ export default function CardFullScreen({
                   {playerName || "INOCENTE"}
                 </div>
               )}
-
-              {/* Botones de navegación */}
-              <div className="flex flex-col items-center gap-4 mt-8">
-                {index + 1 < total ? (
-                  <button
-                    className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
-                    onClick={onNext}
-                  >
-                    Siguiente carta
-                  </button>
-                ) : (
-                  <>
-                    {showVoteButton && (
-                      <button
-                        className="bg-red-600 hover:bg-red-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
-                        onClick={onVote}
-                      >
-                        Votar
-                      </button>
-                    )}
-                    <button
-                      className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
-                      onClick={onRestart}
-                    >
-                      Volver a jugar
-                    </button>
-                    <button
-                      className="bg-gray-500 hover:bg-gray-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
-                      onClick={onNext}
-                    >
-                      Terminar
-                    </button>
-                  </>
-                )}
-              </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center text-center">

@@ -36,7 +36,7 @@ import { getPresetById } from "@/data/playerPresets";
  * - currentCardIndex: el índice de la carta actual que está siendo revelada.
  * - revealedCards: un array con los índices de las cartas que ya han sido reveladas.
  * - isShuffling: un booleano que indica si se está mezclando el orden de las cartas.
- * - shuffleKey: una clave que se usa para forzar la re-renderización de las cartas.
+ * - shuffleKey: una clave que se usa para forzar la re-renderización de las cartas.  
  */
 
 export default function Home() {
