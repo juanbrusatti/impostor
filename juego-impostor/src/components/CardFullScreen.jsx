@@ -1,8 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 /**
- * CardFullScreen
- * Muestra una carta en pantalla completa y permite revelar el contenido con swipe hacia arriba.
+ * CardFullScreen - Drawer Style
+ * Muestra una carta en pantalla completa con un cajón que se abre desde abajo.
  * Props:
  * - role: "IMPOSTOR" | "INOCENTE"
  * - playerName: nombre del futbolista
@@ -27,189 +27,280 @@ export default function CardFullScreen({
   showVoteButton,
   onVote,
 }) {
-  const [revealed, setRevealed] = useState(false);
-  const [dragY, setDragY] = useState(0); // Para feedback visual
-  const dragStartY = useRef(null);
-  const dragging = useRef(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerHeight, setDrawerHeight] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [currentDragY, setCurrentDragY] = useState(0);
+  const [hasRevealed, setHasRevealed] = useState(false);
+  
+  const drawerRef = useRef(null);
+  const containerRef = useRef(null);
 
-  // --- Touch events (mobile) ---
+  // Configuración del drawer
+  const DRAWER_MAX_HEIGHT = window.innerHeight * 0.7; // 70% de la pantalla
+  const DRAWER_MIN_HEIGHT = 0;
+  const REVEAL_THRESHOLD = DRAWER_MAX_HEIGHT * 0.5; // 50% para revelar
+
+  // Detectar si es móvil
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+           window.innerWidth <= 768;
+  };
+
+  // Touch events para móvil
   const handleTouchStart = (e) => {
     if (e.touches.length === 1) {
-      dragging.current = true;
-      dragStartY.current = e.touches[0].clientY;
-      setDragY(0);
+      setIsDragging(true);
+      setDragStartY(e.touches[0].clientY);
+      setCurrentDragY(drawerHeight);
     }
   };
+
   const handleTouchMove = (e) => {
-    if (dragging.current && e.touches.length === 1) {
-      const deltaY = dragStartY.current - e.touches[0].clientY;
-      setDragY(Math.max(0, deltaY));
+    if (isDragging && e.touches.length === 1) {
+      const deltaY = dragStartY - e.touches[0].clientY;
+      const newHeight = Math.max(DRAWER_MIN_HEIGHT, 
+                                Math.min(DRAWER_MAX_HEIGHT, currentDragY + deltaY));
+      setDrawerHeight(newHeight);
     }
   };
+
   const handleTouchEnd = () => {
-    if (dragging.current) {
-      const threshold = window.innerHeight * 0.33;
-      if (dragY > threshold && !revealed) {
-        setRevealed(true);
-        // Solo llamar onReveal si revealed era false justo antes
-        if (onReveal) {
-          setTimeout(() => onReveal(index), 0);
+    if (isDragging) {
+      setIsDragging(false);
+      
+      // Determinar si abrir o cerrar
+      if (drawerHeight > REVEAL_THRESHOLD) {
+        // Abrir completamente
+        setDrawerHeight(DRAWER_MAX_HEIGHT);
+        setDrawerOpen(true);
+        if (!hasRevealed) {
+          setHasRevealed(true);
+          if (onReveal) {
+            setTimeout(() => onReveal(index), 300);
+          }
         }
+      } else {
+        // Cerrar completamente
+        setDrawerHeight(DRAWER_MIN_HEIGHT);
+        setDrawerOpen(false);
       }
-      setDragY(0);
-      dragging.current = false;
     }
   };
 
-  // --- Mouse events (PC) ---
-  // Click derecho (button === 2)
+  // Mouse events para desktop
   const handleMouseDown = (e) => {
-    if (e.button === 2) { // click derecho
-      dragging.current = true;
-      dragStartY.current = e.clientY;
-      setDragY(0);
+    if (e.button === 0) { // Click izquierdo
+      setIsDragging(true);
+      setDragStartY(e.clientY);
+      setCurrentDragY(drawerHeight);
     }
   };
+
   const handleMouseMove = (e) => {
-    if (dragging.current) {
-      const deltaY = dragStartY.current - e.clientY;
-      setDragY(Math.max(0, deltaY));
+    if (isDragging) {
+      const deltaY = dragStartY - e.clientY;
+      const newHeight = Math.max(DRAWER_MIN_HEIGHT, 
+                                Math.min(DRAWER_MAX_HEIGHT, currentDragY + deltaY));
+      setDrawerHeight(newHeight);
     }
   };
-  const handleMouseUp = (e) => {
-    if (dragging.current) {
-      const threshold = window.innerHeight * 0.33;
-      if (dragY > threshold && !revealed) {
-        setRevealed(true);
-        if (onReveal) {
-          setTimeout(() => onReveal(index), 0);
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false);
+      
+      if (drawerHeight > REVEAL_THRESHOLD) {
+        setDrawerHeight(DRAWER_MAX_HEIGHT);
+        setDrawerOpen(true);
+        if (!hasRevealed) {
+          setHasRevealed(true);
+          if (onReveal) {
+            setTimeout(() => onReveal(index), 300);
+          }
         }
+      } else {
+        setDrawerHeight(DRAWER_MIN_HEIGHT);
+        setDrawerOpen(false);
       }
-      setDragY(0);
-      dragging.current = false;
     }
   };
-  // Scroll con rueda del mouse hacia abajo
-const handleWheel = (e) => {
-  if (!revealed && e.deltaY > 0) { // solo hacia abajo
-    setDragY((prev) => {
-      const newDragY = prev + e.deltaY; // ya es positivo
-      if (newDragY > window.innerHeight * 0.33 && !revealed) {
-        setRevealed(true);
-        if (onReveal) {
-          setTimeout(() => onReveal(index), 0);
+
+  // Click para abrir/cerrar en desktop
+  const handleContainerClick = (e) => {
+    if (!isMobile() && !isDragging) {
+      if (drawerOpen) {
+        setDrawerHeight(DRAWER_MIN_HEIGHT);
+        setDrawerOpen(false);
+      } else {
+        setDrawerHeight(DRAWER_MAX_HEIGHT);
+        setDrawerOpen(true);
+        if (!hasRevealed) {
+          setHasRevealed(true);
+          if (onReveal) {
+            setTimeout(() => onReveal(index), 300);
+          }
         }
-        return 0;
       }
-      return newDragY;
-    });
-  }
-};
+    }
+  };
 
+  // Wheel para desktop
+  const handleWheel = (e) => {
+    if (!isMobile()) {
+      e.preventDefault();
+      const delta = e.deltaY * 0.5;
+      const newHeight = Math.max(DRAWER_MIN_HEIGHT, 
+                                Math.min(DRAWER_MAX_HEIGHT, drawerHeight + delta));
+      setDrawerHeight(newHeight);
+      
+      if (newHeight > REVEAL_THRESHOLD && !drawerOpen) {
+        setDrawerOpen(true);
+        if (!hasRevealed) {
+          setHasRevealed(true);
+          if (onReveal) {
+            setTimeout(() => onReveal(index), 300);
+          }
+        }
+      } else if (newHeight <= REVEAL_THRESHOLD && drawerOpen) {
+        setDrawerOpen(false);
+      }
+    }
+  };
 
-  // Para evitar scroll de fondo en mobile
-  React.useEffect(() => {
-    if (!revealed) {
-      document.body.style.overflow = 'hidden';
-    } else {
+  // Prevenir scroll del body
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
       document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [revealed]);
+    };
+  }, []);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-[#1e1e2f] to-[#4cafef] text-white"
-  onTouchStart={handleTouchStart}
-  onTouchMove={handleTouchMove}
-  onTouchEnd={handleTouchEnd}
-  onMouseDown={handleMouseDown}
-  onMouseMove={dragging.current ? handleMouseMove : undefined}
-  onMouseUp={handleMouseUp}
-  onMouseLeave={handleMouseUp}
-  onWheel={handleWheel}
-  onContextMenu={(e) => e.preventDefault()} // evitar menú contextual
-  style={{ touchAction: 'none', userSelect: 'none' }}
+      ref={containerRef}
+      className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-[#1e1e2f] to-[#4cafef] text-white overflow-hidden"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onClick={handleContainerClick}
+      onWheel={handleWheel}
+      style={{ touchAction: 'none', userSelect: 'none' }}
     >
-      <div className="flex-1 flex flex-col items-center justify-center w-full">
-        {/* Indicador swipe */}
-        {!revealed && (
+      {/* Header con información del jugador */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
+        {/* Indicador de swipe */}
+        {!drawerOpen && (
           <div className="absolute top-8 left-0 right-0 flex flex-col items-center">
             <div className="w-12 h-1 rounded-full bg-white/40 mb-2" />
-            <span className="text-base text-white/70 animate-bounce">Desliza hacia arriba para revelar</span>
+            <span className="text-base text-white/70 animate-bounce">
+              {isMobile() ? "Desliza hacia arriba para revelar" : "Haz click o usa la rueda del mouse"}
+            </span>
           </div>
         )}
-        {/* Contenido de la carta */}
-        <div
-          className={`w-full max-w-sm mx-auto rounded-2xl shadow-2xl bg-white/10 p-12 flex flex-col items-center justify-center transition-all duration-500 ${
-            revealed ? "scale-105" : "scale-100"
-          }`}
-          style={!revealed && dragY > 0 ? {
-            transform: `translateY(-${dragY}px) scale(${1 + dragY/600})`,
-            boxShadow: dragY > 40 ? '0 8px 32px #4cafef88' : undefined
-          } : undefined}
-        >
-          {!revealed ? (
-            <div className="flex flex-col items-center justify-center h-80">
-              <span className="text-3xl font-bold mb-2">{playerRealName || `Jugador ${index + 1}`}</span>
-              <span className="text-lg text-white/70">Desliza para ver tu rol</span>
+
+        {/* Contenido principal de la carta */}
+        <div className="flex flex-col items-center justify-center text-center">
+          <div className="text-4xl font-bold mb-4">
+            {playerRealName || `Jugador ${index + 1}`}
+          </div>
+          <div className="text-xl text-white/70">
+            {drawerOpen ? "Tu rol está revelado" : "Desliza hacia arriba para ver tu rol"}
+          </div>
+        </div>
+      </div>
+
+      {/* Drawer que se abre desde abajo */}
+      <div
+        ref={drawerRef}
+        className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm rounded-t-3xl shadow-2xl transition-all duration-300 ease-out"
+        style={{
+          height: `${drawerHeight}px`,
+          transform: `translateY(${drawerHeight > 0 ? 0 : '100%'})`,
+        }}
+      >
+        {/* Handle del drawer */}
+        <div className="flex justify-center pt-4 pb-2">
+          <div className="w-12 h-1 rounded-full bg-gray-400" />
+        </div>
+
+        {/* Contenido del drawer */}
+        <div className="flex flex-col items-center justify-center p-8 h-full">
+          {drawerOpen ? (
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="text-2xl text-gray-600 mb-4">
+                {playerRealName || "Jugador"}
+              </div>
+              <div className="w-full h-px bg-gray-300 my-4"></div>
+              
+              {role === "IMPOSTOR" ? (
+                <div className="text-6xl font-extrabold text-red-500 flex items-center gap-4 mb-6">
+                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 0v6m0 0h3m-3 0H9" />
+                  </svg>
+                  IMPOSTOR
+                </div>
+              ) : (
+                <div className="text-5xl font-bold text-green-500 flex items-center gap-4 mb-6">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {playerName || "INOCENTE"}
+                </div>
+              )}
+
+              {/* Botones de navegación */}
+              <div className="flex flex-col items-center gap-4 mt-8">
+                {index + 1 < total ? (
+                  <button
+                    className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
+                    onClick={onNext}
+                  >
+                    Siguiente carta
+                  </button>
+                ) : (
+                  <>
+                    {showVoteButton && (
+                      <button
+                        className="bg-red-600 hover:bg-red-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
+                        onClick={onVote}
+                      >
+                        Votar
+                      </button>
+                    )}
+                    <button
+                      className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
+                      onClick={onRestart}
+                    >
+                      Volver a jugar
+                    </button>
+                    <button
+                      className="bg-gray-500 hover:bg-gray-700 px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all"
+                      onClick={onNext}
+                    >
+                      Terminar
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-80">
-              <span className="text-xl text-gray-300 mb-2">{playerRealName || "Jugador"}</span>
-              <div className="w-full h-px bg-white/20 my-2"></div>
-              {role === "IMPOSTOR" ? (
-                <span className="text-4xl font-extrabold text-red-500 flex items-center gap-2">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 0v6m0 0h3m-3 0H9" /></svg>
-                  IMPOSTOR
-                </span>
-              ) : (
-                <span className="text-3xl font-bold text-green-400 flex items-center gap-2">
-                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  {playerName || "INOCENTE"}
-                </span>
-              )}
+            <div className="flex flex-col items-center justify-center text-center">
+              <div className="text-3xl font-bold text-gray-700 mb-4">
+                {playerRealName || `Jugador ${index + 1}`}
+              </div>
+              <div className="text-lg text-gray-500">
+                Desliza hacia arriba para revelar tu rol
+              </div>
             </div>
           )}
         </div>
       </div>
-      {/* Navegación */}
-      {revealed && (
-  <div className="w-full flex flex-col items-center mt-8">
-    {index + 1 < total ? (
-      <button
-        className="bg-[#4cafef] hover:bg-[#3196e8] px-8 py-4 rounded-xl font-bold text-lg shadow-lg transition-all mb-4"
-        onClick={onNext}
-      >
-        Siguiente carta
-      </button>
-    ) : (
-      <>
-        {/* Botón de votar, solo visible si showVoteButton es true */}
-        {showVoteButton && (
-          <button
-            className="bg-red-600 hover:bg-red-700 w-70 max-w-xs py-2 rounded-lg font-bold text-base shadow-lg transition-all mb-3"
-            onClick={onVote}
-          >
-            Votar
-          </button>
-        )}
-          <button
-          className="bg-[#4cafef] hover:bg-[#3196e8] w-60 max-w-xs py-2 rounded-lg font-semibold text-sm shadow-md transition-all mb-3"
-          onClick={onRestart}
-          >
-          Volver a jugar
-          </button>
-          <button
-          className="bg-gray-500 hover:bg-gray-700 w-50 max-w-xs py-2 rounded-md font-normal text-sm shadow transition-all mb-8"
-          onClick={onNext}
-          >
-          Terminar
-         </button>
-      </>
-    )}
-  </div>
-)}
     </div>
   );
-};
+}
