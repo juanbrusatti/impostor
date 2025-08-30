@@ -123,14 +123,40 @@ io.on('connection', (socket) => {
       return;
     }
 
+    // Obtener la lista de jugadores disponibles
+    let availablePlayers = [];
+    if (gameConfig.selectedPreset?.players?.length > 0) {
+      availablePlayers = [...gameConfig.selectedPreset.players];
+    } else if (gameConfig.playersInput) {
+      availablePlayers = gameConfig.playersInput
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    
+    // Si no hay jugadores disponibles, usar lista por defecto
+    if (availablePlayers.length === 0) {
+      availablePlayers = [
+        'Messi', 'Cristiano Ronaldo', 'Neymar', 'Mbappé', 'Lewandowski',
+        'Benzema', 'Salah', 'Haaland', 'De Bruyne', 'Modrić'
+      ];
+    }
+
+    // Seleccionar UN futbolista aleatorio para TODOS los inocentes
+    const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+
     room.gameState = 'playing';
     room.gameData = {
       ...gameConfig,
       roles: generateRoles(room.players.length, gameConfig.innocentCount, gameConfig.impostorCount),
-      currentPlayerIndex: 0
+      currentPlayerIndex: 0,
+      selectedPlayer: randomPlayer, // El futbolista seleccionado para todos
+      availablePlayers: availablePlayers // Lista completa para referencia
     };
 
     console.log(`Juego iniciado en sala ${room.code}`);
+    console.log(`Futbolista seleccionado: ${randomPlayer}`);
+    console.log(`Roles asignados:`, room.gameData.roles);
     io.to(room.code).emit('gameStarted', room.gameData);
   });
 

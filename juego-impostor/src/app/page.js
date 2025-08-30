@@ -430,6 +430,7 @@ const startOnlineGame = (gameData) => {
   
   console.log('🔍 Índice del jugador encontrado:', playerIndex);
   console.log('📋 Roles disponibles:', gameData.roles);
+  console.log('⚽ Futbolista seleccionado por el servidor:', gameData.selectedPlayer);
   
   if (playerIndex !== -1 && gameData.roles && gameData.roles[playerIndex]) {
     const playerRole = gameData.roles[playerIndex];
@@ -437,32 +438,13 @@ const startOnlineGame = (gameData) => {
     
     console.log(`👤 Jugador ${currentPlayerName} tiene rol: ${playerRole}`);
     
-    // Obtener la lista de jugadores disponibles
-    let availablePlayers = [];
-    if (gameData.selectedPreset?.players?.length > 0) {
-      availablePlayers = [...gameData.selectedPreset.players];
-    } else if (gameData.playersInput) {
-      availablePlayers = gameData.playersInput
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean);
-    }
-    
-    // Si no hay jugadores disponibles, usar lista por defecto
-    if (availablePlayers.length === 0) {
-      availablePlayers = [
-        'Messi', 'Cristiano Ronaldo', 'Neymar', 'Mbappé', 'Lewandowski',
-        'Benzema', 'Salah', 'Haaland', 'De Bruyne', 'Modrić'
-      ];
-    }
-    
-    // Seleccionar un jugador aleatorio para los inocentes
-    const randomPlayer = availablePlayers[Math.floor(Math.random() * availablePlayers.length)];
+    // Usar el futbolista seleccionado por el servidor
+    const selectedPlayer = gameData.selectedPlayer || 'Messi';
     
     // Crear la carta para este jugador
     const card = {
       role: playerRole,
-      name: playerRole === 'IMPOSTOR' ? 'IMPOSTOR' : randomPlayer,
+      name: playerRole === 'IMPOSTOR' ? 'IMPOSTOR' : selectedPlayer,
       playerRole: playerRole,
       isImpostor: playerRole === 'IMPOSTOR',
       realName: currentPlayerName
@@ -483,7 +465,7 @@ const startOnlineGame = (gameData) => {
     // Fallback: crear una carta por defecto
     const fallbackCard = {
       role: 'INOCENTE',
-      name: 'Messi',
+      name: gameData.selectedPlayer || 'Messi',
       playerRole: 'INOCENTE',
       isImpostor: false,
       realName: currentPlayer?.name || 'Jugador'
